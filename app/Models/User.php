@@ -30,18 +30,32 @@ class User extends Authenticatable implements MustVerifyEmail
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
-    {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
-    }
+	/**
+	 * Get the attributes that should be cast.
+	 *
+	 * @return array<string, string>
+	 */
+	protected function casts(): array
+	{
+		return [
+			'email_verified_at' => 'datetime',
+			'password'          => 'hashed',
+			'preferences'       => 'array',
+			'otp_secret'        => 'encrypted',
+		];
+	}
+
+	/**
+	 * @param  string|null          $value
+	 * @return array<string, mixed>
+	 */
+	public function getPreferencesAttribute(string|null $value): array
+	{
+		return array_merge([
+			'theme'         => 'dark',
+			'notifications' => true,
+		], json_decode($value ?? '{}', true));
+	}
 
     /**
      * Get the user's initials
@@ -54,4 +68,26 @@ class User extends Authenticatable implements MustVerifyEmail
             ? Str::substr($initials, 0, 1).Str::substr($initials, -1)
             : $initials;
     }
+	protected static function boot(): void
+	{
+		parent::boot();
+
+		static::creating(function (User $user): void {
+			$attributes = $user->getAttributes();
+
+			if (!array_key_exists('preferences', $attributes) || $attributes['preferences'] === null) {
+				$user->setAttribute('preferences', [
+					'theme'         => 'dark',
+					'notifications' => true,
+				]);
+			}
+		});
+	}
+
+	protected static function booted()
+	{
+		static::creating(function ($user): void {
+			$user->uuid ??= (string) Str::ulid();
+		});
+	}
 }

@@ -1,28 +1,18 @@
 
 <details class="dropdown relative ml-1 border-l border-border pl-3">
 	<summary class="dropdown-trigger flex cursor-pointer list-none items-center gap-2">
-		<x-ui.avatar initials="{{ getNameInitials('Usuário Administrativo') }}" color="primary" circle />
+		<x-ui.avatar initials="{{ getNameInitials(auth()->user()->name) }}" color="primary" circle />
 		<span class="hidden text-left sm:block">
 			<span class="block text-sm font-medium leading-tight text-header-foreground">
-				Usuário Administrativo
+				{{ auth()->user()->name }}
 			</span>
 			<span class="block text-xs leading-tight text-muted-foreground">
-				Administrador
+				{{ auth()->user()->email }}
 			</span>
 		</span>
 	</summary>
 
 	<div class="absolute right-0 z-20 mt-2 w-52 overflow-hidden rounded-md border border-border bg-popover py-1 shadow-lg">
-		<div class="border-b border-border px-4 py-2 text-sm font-semibold text-popover-foreground">
-			Olá, Usuário!
-		</div>
-
-		{{-- seletor de tema: troca o data-theme do <html> via clique delegado
-			 em resources/js/layout.js ([data-theme-name]). As cores dos
-			 swatches abaixo são intencionalmente fixas — são a prévia visual
-			 de um tema que pode não estar ativo, então não podem depender de
-			 variáveis CSS (só existem quando aquele tema está aplicado no
-			 <html>). Mantenha em sincronia com resources/css/themes/*.css. --}}
 		<div class="border-b border-border px-4 py-3">
 			<p class="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Tema</p>
 			<div class="flex items-center gap-2">
