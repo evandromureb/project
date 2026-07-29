@@ -52,35 +52,34 @@ class SyncWebRoutesToMenus
     }
 
     /**
+     * Named routes registered from routes/web.php (and any file it requires,
+     * e.g. routes/auth.php), excluding internal routes registered by packages.
+     *
      * @return list<string>
      */
     public function webNamedRoutes(): array
     {
+        $excludedNamePrefixes = ['livewire.', 'default-livewire.', 'boost.', 'storage.'];
+
         return collect(Route::getRoutes())
-            ->filter(function (RoutingRoute $route): bool {
+            ->filter(function (RoutingRoute $route) use ($excludedNamePrefixes): bool {
                 $name = $route->getName();
 
                 if (! is_string($name) || $name === '') {
                     return false;
                 }
 
-                $action = $route->getAction();
-                $file = $action['file'] ?? null;
-
-                if (is_string($file)) {
-                    return str_ends_with(str_replace('\\', '/', $file), '/routes/web.php');
+                if (! in_array('web', $route->middleware(), true)) {
+                    return false;
                 }
 
-                // Fallback: named livewire/app routes that look like web.php entries.
-                return in_array($name, [
-                    'dashboard',
-                    'app',
-                    'app1',
-                    'app2',
-                    'app3',
-                    'app4',
-                    'settings.sidebar',
-                ], true);
+                foreach ($excludedNamePrefixes as $prefix) {
+                    if (str_starts_with($name, $prefix)) {
+                        return false;
+                    }
+                }
+
+                return true;
             })
             ->map(fn (RoutingRoute $route): string => (string) $route->getName())
             ->unique()

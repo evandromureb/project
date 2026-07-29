@@ -2,6 +2,7 @@
 
 namespace App\Actions\Menu;
 
+use App\Enums\MenuType;
 use App\Models\Menu;
 use App\Support\MenuTree;
 use Illuminate\Support\Facades\DB;
@@ -37,7 +38,12 @@ class ReorderMenuTree
             ]);
         }
 
-        $expected = Menu::query()->forGroup($group)->pluck('key')->sort()->values();
+        $expected = Menu::query()
+            ->forGroup($group)
+            ->where('type', '!=', MenuType::HIDDEN)
+            ->pluck('key')
+            ->sort()
+            ->values();
         $received = collect($keys)->sort()->values();
 
         if ($expected->all() !== $received->all()) {
@@ -57,6 +63,13 @@ class ReorderMenuTree
                     if ($parent === null || $parent->is($menu)) {
                         throw ValidationException::withMessages([
                             'tree' => "Parent inválido para {$row['key']}.",
+                        ]);
+                    }
+
+                    if ($menu->type === MenuType::DROP
+                        && ($parent->type !== MenuType::DROP || $parent->parent_id !== null)) {
+                        throw ValidationException::withMessages([
+                            'tree' => "O drop \"{$row['key']}\" só pode ser aninhado em um drop de nível superior (máximo de 2 níveis).",
                         ]);
                     }
 

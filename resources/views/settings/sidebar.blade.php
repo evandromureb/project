@@ -30,6 +30,8 @@ return new class extends Component
 
     public bool $isCreatingDropItem = false;
 
+    public bool $isCreatingHidden = false;
+
     public string $formKey = '';
 
     public string $formLabel = '';
@@ -62,7 +64,22 @@ return new class extends Component
     #[Computed]
     public function menus(): Collection
     {
-        return Menu::treeForGroup($this->group);
+        return Menu::treeForGroup($this->group)
+            ->reject(fn (Menu $menu): bool => $menu->type === MenuType::HIDDEN)
+            ->values();
+    }
+
+    /**
+     * @return Collection<int, Menu>
+     */
+    #[Computed]
+    public function hiddenMenus(): Collection
+    {
+        return Menu::query()
+            ->forGroup($this->group)
+            ->where('type', MenuType::HIDDEN)
+            ->orderBy('sort')
+            ->get();
     }
 
     /**
@@ -127,6 +144,30 @@ return new class extends Component
      * @return list<array{value: string, label: string}>
      */
     #[Computed]
+    public function dropParentOptions(): array
+    {
+        return Menu::query()
+            ->forGroup($this->group)
+            ->where('type', MenuType::DROP)
+            ->whereNull('parent_id')
+            ->when(
+                $this->selectedKey !== null,
+                fn ($query) => $query->where('key', '!=', $this->selectedKey),
+            )
+            ->orderBy('sort')
+            ->get()
+            ->map(fn (Menu $menu): array => [
+                'value' => (string) $menu->id,
+                'label' => (string) ($menu->label ?? $menu->key),
+            ])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @return list<array{value: string, label: string}>
+     */
+    #[Computed]
     public function routeOptions(): array
     {
         $usedRoutes = Menu::query()
@@ -153,7 +194,7 @@ return new class extends Component
 
     public function getAllowsIconProperty(): bool
     {
-        return in_array($this->formType, [MenuType::ITEM->value, MenuType::DROP->value], true);
+        return in_array($this->formType, [MenuType::ITEM->value, MenuType::DROP->value, MenuType::HIDDEN->value], true);
     }
 
     public function getIsDropItemProperty(): bool
@@ -173,7 +214,7 @@ return new class extends Component
 
     public function getNeedsLinkProperty(): bool
     {
-        return in_array($this->formType, [MenuType::ITEM->value, MenuType::DROP_ITEM->value], true);
+        return in_array($this->formType, [MenuType::ITEM->value, MenuType::DROP_ITEM->value, MenuType::HIDDEN->value], true);
     }
 
     public function getFormReadyProperty(): bool
@@ -192,7 +233,7 @@ return new class extends Component
             $this->formIcon = '';
         }
 
-        if ($value !== MenuType::DROP_ITEM->value) {
+        if (! in_array($value, [MenuType::DROP_ITEM->value, MenuType::DROP->value], true)) {
             $this->formParentId = '';
         }
 
@@ -230,10 +271,11 @@ return new class extends Component
         $this->isCreating = false;
         $this->isEditing = true;
         $this->isCreatingDropItem = false;
+        $this->isCreatingHidden = false;
         $this->fillForm($menu);
         $this->statusMessage = '';
         $this->resetErrorBag();
-        unset($this->routeOptions, $this->dropOptions, $this->typeOptions);
+        unset($this->routeOptions, $this->dropOptions, $this->dropParentOptions, $this->typeOptions);
     }
 
     public function startCreate(): void
@@ -242,10 +284,25 @@ return new class extends Component
         $this->isCreating = true;
         $this->isEditing = false;
         $this->isCreatingDropItem = false;
+        $this->isCreatingHidden = false;
         $this->formType = '';
         $this->statusMessage = '';
         $this->resetErrorBag();
-        unset($this->routeOptions, $this->dropOptions, $this->typeOptions);
+        unset($this->routeOptions, $this->dropOptions, $this->dropParentOptions, $this->typeOptions);
+    }
+
+    public function startCreateHidden(): void
+    {
+        $this->clearForm();
+        $this->isCreating = true;
+        $this->isEditing = false;
+        $this->isCreatingDropItem = false;
+        $this->isCreatingHidden = true;
+        $this->formType = MenuType::HIDDEN->value;
+        $this->syncFormKey();
+        $this->statusMessage = '';
+        $this->resetErrorBag();
+        unset($this->routeOptions, $this->dropOptions, $this->dropParentOptions, $this->typeOptions);
     }
 
     public function createChildFor(string $parentKey): void
@@ -267,7 +324,7 @@ return new class extends Component
         $this->syncFormKey();
         $this->statusMessage = '';
         $this->resetErrorBag();
-        unset($this->routeOptions, $this->dropOptions, $this->typeOptions);
+        unset($this->routeOptions, $this->dropOptions, $this->dropParentOptions, $this->typeOptions);
     }
 
     public function deleteMenu(string $key, DeleteMenu $deleteMenu): void
@@ -278,8 +335,8 @@ return new class extends Component
             return;
         }
 
-        if ($menu->type === MenuType::DROP && $this->menuHasDropItems($menu)) {
-            $this->statusMessage = 'Remova os drop-items deste drop antes de excluí-lo.';
+        if ($menu->type === MenuType::DROP && $this->menuHasChildren($menu)) {
+            $this->statusMessage = 'Remova os itens filhos deste drop antes de excluí-lo.';
             $this->statusTone = 'danger';
 
             return;
@@ -294,7 +351,7 @@ return new class extends Component
         }
 
         $this->treeVersion++;
-        unset($this->menus, $this->expandedKeys, $this->routeOptions, $this->dropOptions, $this->typeOptions);
+        unset($this->menus, $this->hiddenMenus, $this->expandedKeys, $this->routeOptions, $this->dropOptions, $this->dropParentOptions, $this->typeOptions);
         $this->statusMessage = 'Item excluído.';
         $this->statusTone = 'success';
     }
@@ -379,6 +436,36 @@ return new class extends Component
                     fn ($query) => $query->where('group', $this->group)->where('type', MenuType::DROP->value)
                 ),
             ];
+        } elseif ($this->formType === MenuType::DROP->value) {
+            $rules['formParentId'] = [
+                'nullable',
+                'integer',
+                Rule::exists('menus', 'id')->where(
+                    fn ($query) => $query->where('group', $this->group)
+                        ->where('type', MenuType::DROP->value)
+                        ->whereNull('parent_id')
+                ),
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    if ($value === '' || $value === null || $this->selectedKey === null) {
+                        return;
+                    }
+
+                    $menu = Menu::query()->forGroup($this->group)->where('key', $this->selectedKey)->first();
+
+                    if ($menu === null) {
+                        return;
+                    }
+
+                    $hasNestedDrop = Menu::query()
+                        ->where('parent_id', $menu->id)
+                        ->where('type', MenuType::DROP)
+                        ->exists();
+
+                    if ($hasNestedDrop) {
+                        $fail('Este drop possui um drop filho e não pode ser aninhado em outro drop (máximo de 2 níveis).');
+                    }
+                },
+            ];
         } else {
             $rules['formParentId'] = ['nullable'];
             $this->formParentId = '';
@@ -414,6 +501,8 @@ return new class extends Component
 
         if ($this->formType === MenuType::DROP_ITEM->value) {
             $payload['parent_id'] = (int) $this->formParentId;
+        } elseif ($this->formType === MenuType::DROP->value) {
+            $payload['parent_id'] = $this->formParentId !== '' ? (int) $this->formParentId : null;
         } elseif ($this->isCreating) {
             $payload['parent_id'] = null;
         }
@@ -444,7 +533,7 @@ return new class extends Component
     {
         $created = $sync->handle($this->group);
         $this->treeVersion++;
-        unset($this->menus, $this->expandedKeys, $this->routeOptions, $this->dropOptions, $this->typeOptions);
+        unset($this->menus, $this->hiddenMenus, $this->expandedKeys, $this->routeOptions, $this->dropOptions, $this->dropParentOptions, $this->typeOptions);
         $this->statusMessage = $created === []
             ? 'Nenhuma rota nova para sincronizar.'
             : 'Rotas sincronizadas: '.implode(', ', $created);
@@ -471,7 +560,7 @@ return new class extends Component
     private function afterMutation(): void
     {
         $this->treeVersion++;
-        unset($this->menus, $this->expandedKeys, $this->routeOptions, $this->dropOptions, $this->typeOptions);
+        unset($this->menus, $this->hiddenMenus, $this->expandedKeys, $this->routeOptions, $this->dropOptions, $this->dropParentOptions, $this->typeOptions);
         $this->clearForm();
     }
 
@@ -496,11 +585,11 @@ return new class extends Component
         $this->formKey = $key;
     }
 
-    private function menuHasDropItems(Menu $menu): bool
+    private function menuHasChildren(Menu $menu): bool
     {
         return Menu::query()
             ->where('parent_id', $menu->id)
-            ->where('type', MenuType::DROP_ITEM)
+            ->whereIn('type', [MenuType::DROP_ITEM, MenuType::DROP])
             ->exists();
     }
 
@@ -511,6 +600,7 @@ return new class extends Component
         $this->isCreating = false;
         $this->isEditing = false;
         $this->isCreatingDropItem = false;
+        $this->isCreatingHidden = false;
         $this->formKey = '';
         $this->formLabel = '';
         $this->formIcon = '';
@@ -547,6 +637,10 @@ return new class extends Component
                 <x-ui.button type="button" size="sm" wire:click="startCreate" icon="bi-plus-lg">
                     Novo
                 </x-ui.button>
+
+                <x-ui.button type="button" size="sm" variant="outline" wire:click="startCreateHidden" icon="bi-eye-slash">
+                    Novo oculto
+                </x-ui.button>
             </div>
 
             <div wire:key="menu-tree-{{ $treeVersion }}" class="min-w-0 overflow-x-auto rounded-md border border-border bg-background p-2">
@@ -564,19 +658,62 @@ return new class extends Component
                     @endforeach
                 </x-ui.treeview>
             </div>
+
+            @if ($this->hiddenMenus->isNotEmpty())
+                <div class="mt-4 min-w-0">
+                    <p class="mb-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                        Itens ocultos
+                    </p>
+
+                    <div class="min-w-0 divide-y divide-border rounded-md border border-border bg-background">
+                        @foreach ($this->hiddenMenus as $menu)
+                            <div class="flex min-w-0 items-center justify-between gap-2 px-3 py-2">
+                                <div class="flex min-w-0 items-center gap-2">
+                                    <i class="bi bi-eye-slash shrink-0 text-sm leading-none text-muted-foreground" aria-hidden="true"></i>
+                                    <span class="truncate text-sm">{{ $menu->label ?? $menu->key }}</span>
+                                </div>
+
+                                <span class="flex shrink-0 items-center gap-0.5">
+                                    <button
+                                        type="button"
+                                        class="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                                        wire:click="edit(@js($menu->key))"
+                                        title="Editar"
+                                        aria-label="Editar"
+                                    >
+                                        <i class="bi bi-pencil text-sm leading-none" aria-hidden="true"></i>
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        class="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-danger/10 hover:text-danger"
+                                        wire:click="deleteMenu(@js($menu->key))"
+                                        wire:confirm="Excluir este item do menu?"
+                                        title="Excluir"
+                                        aria-label="Excluir"
+                                    >
+                                        <i class="bi bi-trash text-sm leading-none" aria-hidden="true"></i>
+                                    </button>
+                                </span>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
         </x-ui.card>
 
         @if ($this->showForm)
             <x-ui.card
                 class="min-w-0 overflow-hidden"
-                title="{{ $isCreatingDropItem ? 'Novo drop-item' : ($isCreating ? 'Novo item' : 'Editar item') }}"
-                :subtitle="$isCreatingDropItem ? 'Preencha os dados do drop-item.' : ($isCreating ? 'Selecione o tipo para continuar.' : 'Altere os campos e salve.')"
+                title="{{ $isCreatingDropItem ? 'Novo drop-item' : ($isCreatingHidden ? 'Novo item oculto' : ($isCreating ? 'Novo item' : 'Editar item')) }}"
+                :subtitle="$isCreatingDropItem ? 'Preencha os dados do drop-item.' : ($isCreatingHidden ? 'Preencha os dados do item oculto.' : ($isCreating ? 'Selecione o tipo para continuar.' : 'Altere os campos e salve.'))"
             >
                 <form wire:submit.prevent="save" class="flex flex-col gap-4">
-                    @unless ($isCreatingDropItem)
+                    @unless ($isCreatingDropItem || $isCreatingHidden)
+
                         <x-forms.select
                             label="Tipo"
-                            native
+                            clearable
                             :options="$this->typeOptions"
                             wire:model.live="formType"
                             name="formType"
@@ -589,6 +726,7 @@ return new class extends Component
                     @if ($this->formReady)
                         @if ($this->isSeparator)
                             <x-forms.input
+								size="sm"
                                 label="Text"
                                 wire:model.live="formLabel"
                                 name="formLabel"
@@ -618,7 +756,7 @@ return new class extends Component
                             @if ($this->isDropItem && ! $isCreatingDropItem)
                                 <x-forms.select
                                     label="Drop"
-                                    native
+                                    clearable
                                     :options="$this->dropOptions"
                                     wire:model.live="formParentId"
                                     name="formParentId"
@@ -628,11 +766,25 @@ return new class extends Component
                                 />
                             @endif
 
+                            @if ($this->isDrop)
+                                <x-forms.select
+                                    label="Drop pai"
+                                    clearable
+                                    :options="$this->dropParentOptions"
+                                    wire:model.live="formParentId"
+                                    name="formParentId"
+                                    :value="$formParentId"
+                                    placeholder="— nenhum (nível superior) —"
+                                    hint="Aninhe este drop dentro de outro drop de nível superior (máximo de 2 níveis)."
+                                    :error="$errors->first('formParentId')"
+                                />
+                            @endif
+
                             @if ($this->needsLink)
                                 <div class="grid gap-4 sm:grid-cols-2">
                                     <x-forms.select
                                         label="Rota"
-                                        native
+                                        clearable
                                         :options="$this->routeOptions"
                                         wire:model.live="formRoute"
                                         name="formRoute"

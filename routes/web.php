@@ -12,5 +12,6 @@ Route::livewire('/app3', 'dashboard')->name('app3');
 
 Route::livewire('/app4', 'dashboard')->name('app4');
 
-
 Route::livewire('/settings/sidebar', 'settings::sidebar')->name('settings.sidebar');
+
+require __DIR__.'/auth.php';

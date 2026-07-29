@@ -11,11 +11,11 @@
         };
     }
 
-    $hasDropItems = $menu->children->contains(
-        fn (\App\Models\Menu $child): bool => $child->type === \App\Enums\MenuType::DROP_ITEM
+    $hasChildren = $menu->children->contains(
+        fn (\App\Models\Menu $child): bool => in_array($child->type, [\App\Enums\MenuType::DROP_ITEM, \App\Enums\MenuType::DROP], true)
     );
 
-    $canDelete = $menu->type !== \App\Enums\MenuType::DROP || ! $hasDropItems;
+    $canDelete = $menu->type !== \App\Enums\MenuType::DROP || ! $hasChildren;
     $isDrop = $menu->type === \App\Enums\MenuType::DROP;
 @endphp
 
