@@ -40,7 +40,11 @@ class CreateMenu
             $validated['sort'] = ((int) $maxSort) + 1;
         }
 
-        $validated['key'] ??= $this->uniqueKey($group, $validated['label'] ?? 'item');
+        $type = $validated['type'] instanceof MenuType
+            ? $validated['type']->value
+            : (string) $validated['type'];
+
+        $validated['key'] ??= $this->uniqueKey($validated['label'] ?? 'item', $type);
 
         return Menu::query()->create($validated);
     }
@@ -77,14 +81,14 @@ class CreateMenu
         return $validator->validated();
     }
 
-    private function uniqueKey(string $group, string $label): string
+    private function uniqueKey(string $label, string $type): string
     {
-        $base = Str::slug($label) ?: 'item';
-        $key = "{$group}-{$base}";
+        $base = Str::slug($label.$type) ?: 'item';
+        $key = $base;
         $suffix = 1;
 
         while (Menu::query()->where('key', $key)->exists()) {
-            $key = "{$group}-{$base}-{$suffix}";
+            $key = "{$base}-{$suffix}";
             $suffix++;
         }
 

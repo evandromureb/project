@@ -31,6 +31,7 @@ class UpdateMenu
         $validator = Validator::make($data, [
             'type' => ['sometimes', Rule::enum(MenuType::class)],
             'key' => ['sometimes', 'string', 'max:150', Rule::unique('menus', 'key')->ignore($menu->id)],
+            'parent_id' => ['sometimes', 'nullable', 'integer', 'exists:menus,id'],
             'label' => ['nullable', 'string', 'max:150'],
             'icon' => ['nullable', 'string', 'max:100'],
             'route' => ['nullable', 'string', 'max:150'],

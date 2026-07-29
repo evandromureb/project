@@ -44,7 +44,8 @@
         default => 'size-10 p-0',
     };
 
-    $isDisabled = $loading || $attributes->has('disabled');
+    $disabled = $attributes->get('disabled', false);
+    $isDisabled = $loading || (is_bool($disabled) ? $disabled : $attributes->has('disabled'));
     $tag = $href ? 'a' : 'button';
     $hasLabel = $slot->isNotEmpty();
 @endphp
