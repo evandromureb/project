@@ -1,0 +1,35 @@
+/* Tema Green — sobrescreve apenas os tokens que variam (marca + leve
+   tingimento esverdeado); os demais tokens herdam de themes/default.css. */
+[data-theme='green'] {
+    --background: #eef7f0;
+    --card: #ffffff;
+    --border: #dbeade;
+
+    --primary: #16a34a;
+    --primary-foreground: #ffffff;
+    --secondary: #0d9488;
+    --secondary-foreground: #ffffff;
+
+    --header: #f2f9f4;
+    --header-hover: #e6f4ea;
+
+    --sidebar-active: rgb(22 163 74 / 10%);
+    --sidebar-active-foreground: #16a34a;
+}
+
+[data-theme='green'].dark {
+    --background: #0f1a13;
+    --card: #16241a;
+    --border: #22362a;
+
+    --primary: #22c55e;
+    --primary-foreground: #ffffff;
+    --secondary: #14b8a6;
+    --secondary-foreground: #ffffff;
+
+    --header: #101d15;
+    --header-hover: #1a2c20;
+
+    --sidebar-active: rgb(34 197 94 / 15%);
+    --sidebar-active-foreground: #ffffff;
+}

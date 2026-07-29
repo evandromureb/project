@@ -1,0 +1,35 @@
+/* Tema Blue — sobrescreve apenas os tokens que variam (marca + leve
+   tingimento azulado); os demais tokens herdam de themes/default.css. */
+[data-theme='blue'] {
+    --background: #eef4fc;
+    --card: #ffffff;
+    --border: #dbe6f3;
+
+    --primary: #2563eb;
+    --primary-foreground: #ffffff;
+    --secondary: #0ea5e9;
+    --secondary-foreground: #ffffff;
+
+    --header: #f5f9fe;
+    --header-hover: #e8f1fc;
+
+    --sidebar-active: rgb(37 99 235 / 10%);
+    --sidebar-active-foreground: #2563eb;
+}
+
+[data-theme='blue'].dark {
+    --background: #0f1a2b;
+    --card: #16233a;
+    --border: #223252;
+
+    --primary: #3b82f6;
+    --primary-foreground: #ffffff;
+    --secondary: #38bdf8;
+    --secondary-foreground: #0f172a;
+
+    --header: #111d30;
+    --header-hover: #1b2c47;
+
+    --sidebar-active: rgb(59 130 246 / 15%);
+    --sidebar-active-foreground: #ffffff;
+}

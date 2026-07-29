@@ -1,0 +1,96 @@
+/* Tema Corporate — sidebar e footer slate; page-title usa bg-sidebar;
+   popover no padrão claro (como os demais temas); topbar um tom abaixo
+   do content. No escuro, chrome unificado navy. Demais tokens herdam de
+   themes/default.css. */
+[data-theme='corporate'] {
+    --background: #f1f5f9;
+    --card: #ffffff;
+    --card-foreground: #334155;
+    --border: #e2e8f0;
+
+    --foreground: #0f172a;
+    --muted: #e2e8f0;
+    --muted-foreground: #64748b;
+
+    --primary: #475569;
+    --primary-foreground: #ffffff;
+    --secondary: #94a3b8;
+    --secondary-foreground: #0f172a;
+
+    --sidebar: #334155;
+    --sidebar-foreground: #e2e8f0;
+    --sidebar-active: rgb(148 163 184 / 18%);
+    --sidebar-active-foreground: #ffffff;
+    --sidebar-border: rgb(255 255 255 / 12%);
+
+    --header: #e2e8f0;
+    --header-foreground: #0f172a;
+    --header-icon: #475569;
+    --header-hover: #cbd5e1;
+
+    --popover: #ffffff;
+    --popover-foreground: #334155;
+
+    --footer: #334155;
+    --footer-foreground: #94a3b8;
+}
+
+/* Page-title acompanha a sidebar sem sujar o popover (menus no padrão claro). */
+[data-theme='corporate'] .page-title-box {
+    background-color: var(--sidebar);
+}
+
+[data-theme='corporate'] .page-title-box h1 {
+    color: var(--sidebar-active-foreground);
+}
+
+[data-theme='corporate'] .page-title-box p,
+[data-theme='corporate'] .page-title-box .breadcrumb-item,
+[data-theme='corporate'] .page-title-box li {
+    color: var(--sidebar-foreground);
+}
+
+[data-theme='corporate'] .page-title-box ol {
+    border-color: var(--sidebar-border);
+    background-color: var(--sidebar-active);
+}
+
+/* O item ativo do breadcrumb usa text-foreground (utility no próprio elemento),
+   que tem mais especificidade que a cor herdada do <li> e fica escuro demais
+   sobre o fundo escuro da sidebar. */
+[data-theme='corporate'] .page-title-box [aria-current='page'] {
+    color: var(--sidebar-active-foreground);
+}
+
+[data-theme='corporate'].dark {
+    --background: #0f172a;
+    --card: #1e293b;
+    --card-foreground: #f1f5f9;
+    --border: rgb(100 116 139 / 35%);
+
+    --foreground: #f1f5f9;
+    --muted: #1e293b;
+    --muted-foreground: #94a3b8;
+
+    --primary: #94a3b8;
+    --primary-foreground: #0f172a;
+    --secondary: #cbd5e1;
+    --secondary-foreground: #0f172a;
+
+    --sidebar: #0f172a;
+    --sidebar-foreground: #94a3b8;
+    --sidebar-active: rgb(255 255 255 / 10%);
+    --sidebar-active-foreground: #ffffff;
+    --sidebar-border: rgb(255 255 255 / 8%);
+
+    --header: #0f172a;
+    --header-foreground: #f1f5f9;
+    --header-icon: #cbd5e1;
+    --header-hover: #1e293b;
+
+    --popover: #0f172a;
+    --popover-foreground: #e5e7eb;
+
+    --footer: #0f172a;
+    --footer-foreground: #94a3b8;
+}

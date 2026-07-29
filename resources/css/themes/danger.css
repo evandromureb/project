@@ -1,0 +1,35 @@
+/* Tema Danger — sobrescreve apenas os tokens que variam (marca + leve
+   tingimento avermelhado); os demais tokens herdam de themes/default.css. */
+[data-theme='danger'] {
+    --background: #fcefef;
+    --card: #ffffff;
+    --border: #f3dbdb;
+
+    --primary: #dc2626;
+    --primary-foreground: #ffffff;
+    --secondary: #e11d48;
+    --secondary-foreground: #ffffff;
+
+    --header: #fef5f5;
+    --header-hover: #fce8e8;
+
+    --sidebar-active: rgb(220 38 38 / 10%);
+    --sidebar-active-foreground: #dc2626;
+}
+
+[data-theme='danger'].dark {
+    --background: #2b0f0f;
+    --card: color-mix(in srgb, var(--primary) 15%, var(--sidebar));
+    --border: #522222;
+
+    --primary: #ef4444;
+    --primary-foreground: #ffffff;
+    --secondary: #fb7185;
+    --secondary-foreground: #4c0519;
+
+    --header: #301111;
+    --header-hover: #471b1b;
+
+    --sidebar-active: rgb(239 68 68 / 15%);
+    --sidebar-active-foreground: #ffffff;
+}

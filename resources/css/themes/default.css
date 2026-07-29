@@ -1,0 +1,89 @@
+/* Tema Default — também serve de fallback (:root/.dark) quando nenhum
+   data-theme está setado no <html>. Valores medidos na referência do design system. */
+:root {
+    --background: #f3f6f9;
+    --foreground: #1e293b;
+
+    --card: #ffffff;
+    --card-foreground: #334155;
+    --card-shadow: 0 1px 2px rgb(56 65 74 / 15%);
+
+    --popover: #ffffff;
+    --popover-foreground: #374151;
+
+    --border: #e9ebec;
+
+    --muted: #e2e8f0;
+    --muted-foreground: #64748b;
+
+    --primary: #6691e7;
+    --primary-foreground: #ffffff;
+    --secondary: #865ce2;
+    --secondary-foreground: #ffffff;
+    --success: #13c56b;
+    --success-foreground: #ffffff;
+    --warning: #e8bc52;
+    --warning-foreground: #1a1d21;
+    --danger: #ed5e5e;
+    --danger-foreground: #ffffff;
+    --info: #50c3e6;
+    --info-foreground: #ffffff;
+
+    --sidebar: #ffffff;
+    --sidebar-foreground: #6d7080;
+    --sidebar-active: rgb(64 81 137 / 10%);
+    --sidebar-active-foreground: #405189;
+    --sidebar-border: #e9ebec;
+
+    --header: #f3f6f9;
+    --header-foreground: #111827;
+    --header-icon: #495057;
+    --header-hover: #f3f3f9;
+
+    --footer: #ffffff;
+    --footer-foreground: #98a6ad;
+}
+
+.dark {
+    --background: #1a1d21;
+    --foreground: #f1f5f9;
+
+    --card: #212529;
+    --card-foreground: #f1f5f9;
+    --card-shadow: 0 1px 2px rgb(0 0 0 / 40%);
+
+    --popover: #292e32;
+    --popover-foreground: #e5e7eb;
+
+    --border: #32383e;
+
+    --muted: #32383e;
+    --muted-foreground: #94a3b8;
+
+    --primary: #6691e7;
+    --primary-foreground: #ffffff;
+    --secondary: #865ce2;
+    --secondary-foreground: #ffffff;
+    --success: #13c56b;
+    --success-foreground: #ffffff;
+    --warning: #e8bc52;
+    --warning-foreground: #1a1d21;
+    --danger: #ed5e5e;
+    --danger-foreground: #ffffff;
+    --info: #50c3e6;
+    --info-foreground: #ffffff;
+
+    --sidebar: #212529;
+    --sidebar-foreground: #878a99;
+    --sidebar-active: rgb(255 255 255 / 15%);
+    --sidebar-active-foreground: #ffffff;
+    --sidebar-border: rgb(255 255 255 / 10%);
+
+    --header: #292e32;
+    --header-foreground: #ffffff;
+    --header-icon: #ced4da;
+    --header-hover: #32383e;
+
+    --footer: #212529;
+    --footer-foreground: #878a99;
+}

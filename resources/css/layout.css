@@ -1,0 +1,2022 @@
+/* Custom variants usados pelo esqueleto de layout (sidebar, header, footer, dark mode) */
+@custom-variant dark (&:where(.dark, .dark *));
+@custom-variant sidebar-collapsed (&:where(body[data-app-sidebar-minimized="true"], body[data-app-sidebar-minimized="true"] *));
+@custom-variant sidebar-open (&:where([data-sidebar-mobile-open], [data-sidebar-mobile-open] *));
+@custom-variant topbar-fixed (&:where(body[data-app-topbar-fixed="true"] *));
+@custom-variant topbar-static (&:where(body[data-app-topbar-fixed="false"] *));
+@custom-variant footer-fixed (&:where(body[data-app-footer-fixed="true"] *));
+@custom-variant footer-static (&:where(body[data-app-footer-fixed="false"] *));
+
+/* <x-ui.sticky> — ui-sticky-active / ui-sticky-release */
+@custom-variant ui-sticky-active {
+    &[data-ui-sticky-initialized].active {
+        @slot;
+    }
+    [data-ui-sticky-initialized].active & {
+        @slot;
+    }
+}
+
+@custom-variant ui-sticky-release {
+    &[data-ui-sticky-initialized].release {
+        @slot;
+    }
+    [data-ui-sticky-initialized].release & {
+        @slot;
+    }
+}
+
+/* Mapeamento único dos design tokens (variáveis cruas definidas em
+   resources/css/themes/*.css, comutadas via .dark e [data-theme="..."])
+   para utilities Tailwind reais. Este bloco NÃO muda por tema — só os
+   valores brutos das variáveis mudam por seletor de tema. */
+@theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --shadow-card: var(--card-shadow);
+
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+
+    --color-border: var(--border);
+
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-success: var(--success);
+    --color-success-foreground: var(--success-foreground);
+    --color-warning: var(--warning);
+    --color-warning-foreground: var(--warning-foreground);
+    --color-danger: var(--danger);
+    --color-danger-foreground: var(--danger-foreground);
+    --color-info: var(--info);
+    --color-info-foreground: var(--info-foreground);
+
+    --color-sidebar: var(--sidebar);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-active: var(--sidebar-active);
+    --color-sidebar-active-foreground: var(--sidebar-active-foreground);
+    --color-sidebar-border: var(--sidebar-border);
+
+    --color-header: var(--header);
+    --color-header-foreground: var(--header-foreground);
+    --color-header-icon: var(--header-icon);
+    --color-header-hover: var(--header-hover);
+
+    --color-footer: var(--footer);
+    --color-footer-foreground: var(--footer-foreground);
+}
+
+/* Cards e botões (espaçamento/visual alinhados à referência do design system) */
+@layer components {
+    /* Card: fundo elevado, cantos suaves, padding interno ~20px (p-5) */
+    .card {
+        @apply rounded-md border border-border bg-card text-card-foreground shadow-card;
+    }
+
+    .card-body {
+        @apply p-5;
+    }
+
+    .card-header {
+        @apply flex items-center justify-between gap-3 border-b border-border px-5 py-4;
+    }
+
+    .card-title {
+        @apply m-0 text-base font-semibold text-card-foreground;
+    }
+
+    .card-footer {
+        @apply flex items-center justify-between gap-3 border-t border-border px-5 py-4;
+    }
+
+    .btn {
+        @apply inline-flex items-center justify-center gap-2 rounded-md border border-transparent
+               px-4 py-2 text-sm font-medium shadow-sm transition-colors duration-150
+               focus-visible:outline-2 focus-visible:outline-offset-2
+               disabled:pointer-events-none disabled:opacity-50;
+    }
+
+    /* Uso: combinar com a classe base .btn, ex. class="btn btn-primary" */
+    .btn-primary {
+        @apply bg-primary text-primary-foreground hover:brightness-90 focus-visible:outline-primary;
+    }
+
+    .btn-secondary {
+        @apply bg-secondary text-secondary-foreground hover:brightness-90 focus-visible:outline-secondary;
+    }
+
+    .btn-success {
+        @apply bg-success text-success-foreground hover:brightness-90 focus-visible:outline-success;
+    }
+
+    .btn-info {
+        @apply bg-info text-info-foreground hover:brightness-90 focus-visible:outline-info;
+    }
+
+    .btn-warning {
+        @apply bg-warning text-warning-foreground hover:brightness-90 focus-visible:outline-warning;
+    }
+
+    .btn-danger {
+        @apply bg-danger text-danger-foreground hover:brightness-90 focus-visible:outline-danger;
+    }
+
+    .btn-outline-primary {
+        @apply border-primary text-primary hover:bg-primary hover:text-primary-foreground;
+    }
+
+    .btn-outline-secondary {
+        @apply border-secondary text-secondary hover:bg-secondary hover:text-secondary-foreground;
+    }
+
+    .btn-outline-success {
+        @apply border-success text-success hover:bg-success hover:text-success-foreground;
+    }
+
+    .btn-outline-info {
+        @apply border-info text-info hover:bg-info hover:text-info-foreground;
+    }
+
+    .btn-outline-warning {
+        @apply border-warning text-warning hover:bg-warning hover:text-warning-foreground;
+    }
+
+    .btn-outline-danger {
+        @apply border-danger text-danger hover:bg-danger hover:text-danger-foreground;
+    }
+
+    .btn-soft-primary {
+        @apply border-transparent bg-primary/15 text-primary shadow-none hover:bg-primary/25;
+    }
+
+    .btn-soft-secondary {
+        @apply border-transparent bg-secondary/15 text-secondary shadow-none hover:bg-secondary/25;
+    }
+
+    .btn-soft-success {
+        @apply border-transparent bg-success/15 text-success shadow-none hover:bg-success/25;
+    }
+
+    .btn-soft-info {
+        @apply border-transparent bg-info/15 text-info shadow-none hover:bg-info/25;
+    }
+
+    .btn-soft-warning {
+        @apply border-transparent bg-warning/15 text-warning shadow-none hover:bg-warning/25;
+    }
+
+    .btn-soft-danger {
+        @apply border-transparent bg-danger/15 text-danger shadow-none hover:bg-danger/25;
+    }
+
+    .btn-ghost-primary {
+        @apply border-transparent bg-transparent text-primary shadow-none hover:bg-primary/10;
+    }
+
+    .btn-ghost-secondary {
+        @apply border-transparent bg-transparent text-secondary shadow-none hover:bg-secondary/10;
+    }
+
+    .btn-ghost-success {
+        @apply border-transparent bg-transparent text-success shadow-none hover:bg-success/10;
+    }
+
+    .btn-ghost-info {
+        @apply border-transparent bg-transparent text-info shadow-none hover:bg-info/10;
+    }
+
+    .btn-ghost-warning {
+        @apply border-transparent bg-transparent text-warning shadow-none hover:bg-warning/10;
+    }
+
+    .btn-ghost-danger {
+        @apply border-transparent bg-transparent text-danger shadow-none hover:bg-danger/10;
+    }
+
+    .btn-link-primary {
+        @apply border-transparent bg-transparent p-0 text-primary shadow-none underline-offset-4 hover:underline;
+    }
+
+    .btn-link-secondary {
+        @apply border-transparent bg-transparent p-0 text-secondary shadow-none underline-offset-4 hover:underline;
+    }
+
+    .btn-link-success {
+        @apply border-transparent bg-transparent p-0 text-success shadow-none underline-offset-4 hover:underline;
+    }
+
+    .btn-link-info {
+        @apply border-transparent bg-transparent p-0 text-info shadow-none underline-offset-4 hover:underline;
+    }
+
+    .btn-link-warning {
+        @apply border-transparent bg-transparent p-0 text-warning shadow-none underline-offset-4 hover:underline;
+    }
+
+    .btn-link-danger {
+        @apply border-transparent bg-transparent p-0 text-danger shadow-none underline-offset-4 hover:underline;
+    }
+
+    /* Tamanhos: combinar com .btn, ex. class="btn btn-primary btn-sm" */
+    .btn-sm {
+        @apply gap-1.5 rounded px-3 py-1.5 text-xs;
+    }
+
+    .btn-lg {
+        @apply gap-2.5 rounded-lg px-5 py-2.5 text-base;
+    }
+
+    /* Formato pill — combinar por último para sobrepor o rounded-md/rounded padrão */
+    .btn-rounded {
+        @apply rounded-full;
+    }
+
+    /*
+     * Button group: agrupa <x-ui.button> (cada um já com classe .btn) num bloco
+     * "conectado". O seletor composto ".btn-group > .btn" tem especificidade
+     * maior que ".btn"/".btn-sm"/".btn-lg" isoladas, então sobrepõe o
+     * arredondamento/sombra individual de cada botão independente da ordem no
+     * arquivo — mesmo princípio do ".btn-group" .
+     */
+    .btn-group {
+        @apply inline-flex;
+    }
+
+    .btn-group-vertical {
+        @apply inline-flex flex-col;
+    }
+
+    .btn-group > .btn,
+    .btn-group-vertical > .btn {
+        @apply relative rounded-none shadow-none;
+    }
+
+    .btn-group > .btn:only-child,
+    .btn-group-vertical > .btn:only-child {
+        @apply rounded-md;
+    }
+
+    .btn-group > .btn:first-child:not(:only-child) {
+        @apply rounded-l-md;
+    }
+
+    .btn-group > .btn:last-child:not(:only-child) {
+        @apply rounded-r-md;
+    }
+
+    .btn-group > .btn:not(:first-child) {
+        @apply -ml-px;
+    }
+
+    .btn-group-vertical > .btn:first-child:not(:only-child) {
+        @apply rounded-t-md;
+    }
+
+    .btn-group-vertical > .btn:last-child:not(:only-child) {
+        @apply rounded-b-md;
+    }
+
+    .btn-group-vertical > .btn:not(:first-child) {
+        @apply -mt-px;
+    }
+
+    .btn-group > .btn:hover,
+    .btn-group > .btn:focus-visible,
+    .btn-group-vertical > .btn:hover,
+    .btn-group-vertical > .btn:focus-visible {
+        @apply z-10;
+    }
+
+    /* Tamanhos do grupo — combinar com .btn-group/.btn-group-vertical, ex. class="btn-group btn-group-sm" */
+    .btn-group-sm > .btn {
+        @apply gap-1 px-3 py-1.5 text-xs;
+    }
+
+    .btn-group-lg > .btn {
+        @apply gap-2.5 px-5 py-2.5 text-base;
+    }
+
+    /* Grupo em largura total — cada botão divide o espaço igualmente */
+    .btn-group-block {
+        @apply flex w-full;
+    }
+
+    .btn-group-block > .btn {
+        @apply flex-1;
+    }
+
+    /* Cantos pill no grupo (sobrescreve o rounded-md das bordas externas) */
+    .btn-group.btn-group-rounded > .btn:only-child,
+    .btn-group-vertical.btn-group-rounded > .btn:only-child {
+        @apply rounded-full;
+    }
+
+    .btn-group.btn-group-rounded > .btn:first-child:not(:only-child) {
+        @apply rounded-l-full;
+    }
+
+    .btn-group.btn-group-rounded > .btn:last-child:not(:only-child) {
+        @apply rounded-r-full;
+    }
+
+    .btn-group-vertical.btn-group-rounded > .btn:first-child:not(:only-child) {
+        @apply rounded-t-full;
+    }
+
+    .btn-group-vertical.btn-group-rounded > .btn:last-child:not(:only-child) {
+        @apply rounded-b-full;
+    }
+
+    /*
+     * Input group: conecta <x-forms.input-group.input-group-text>, <x-forms.input-group.input-group-input>
+     * e <x-ui.button> (.btn) num bloco único — mesma ideia do .btn-group /
+     * Input group. Bordas colapsam com -ml-px; cantos só nas
+     * extremidades; foco/hover sobe z-index para a borda ativa aparecer.
+     */
+    .input-group {
+        @apply flex w-full min-w-0 items-stretch;
+    }
+
+    .input-group > .input-group-text,
+    .input-group > .input-group-control,
+    .input-group > .btn {
+        @apply relative rounded-none shadow-none;
+    }
+
+    .input-group > .input-group-text:only-child,
+    .input-group > .input-group-control:only-child,
+    .input-group > .btn:only-child {
+        @apply rounded-lg;
+    }
+
+    .input-group > .input-group-text:first-child:not(:only-child),
+    .input-group > .input-group-control:first-child:not(:only-child),
+    .input-group > .btn:first-child:not(:only-child) {
+        @apply rounded-l-lg;
+    }
+
+    .input-group > .input-group-text:last-child:not(:only-child),
+    .input-group > .input-group-control:last-child:not(:only-child),
+    .input-group > .btn:last-child:not(:only-child) {
+        @apply rounded-r-lg;
+    }
+
+    .input-group > .input-group-text:not(:first-child),
+    .input-group > .input-group-control:not(:first-child),
+    .input-group > .btn:not(:first-child) {
+        @apply -ml-px;
+    }
+
+    .input-group > .input-group-text:hover,
+    .input-group > .input-group-text:focus-within,
+    .input-group > .input-group-control:hover,
+    .input-group > .input-group-control:focus-within,
+    .input-group > .btn:hover,
+    .input-group > .btn:focus-visible {
+        @apply z-10;
+    }
+
+    .input-group-text {
+        @apply box-border inline-flex shrink-0 items-center gap-2 border border-border
+               bg-muted px-3 font-medium text-muted-foreground;
+    }
+
+    .input-group-text-plain {
+        @apply border-0 bg-transparent p-0;
+    }
+
+    .input-group-text:has(.btn) {
+        @apply border-0 bg-transparent p-0;
+    }
+
+    .input-group-text .btn,
+    .input-group-text button {
+        @apply h-full min-h-0 rounded-none shadow-none;
+    }
+
+    .input-group-control {
+        /* Sem shadow-sm: sombra no meio do grupo cria “degrau” visual entre
+           addons/botões e o controle. */
+        @apply box-border flex min-w-0 flex-1 items-center gap-2 border border-border
+               bg-card px-3 text-sm text-foreground shadow-none transition-colors;
+    }
+
+    .input-group-control:focus-within {
+        @apply z-10;
+    }
+
+    /*
+     * Utilities do <x-ui.button iconOnly> (size-8/10/12) têm prioridade sobre
+     * @layer components — height/width com !important para acompanhar o controle.
+     */
+    .input-group > .btn {
+        @apply inline-flex shrink-0 items-center justify-center border shadow-none;
+        width: auto !important;
+        min-height: 0 !important;
+    }
+
+    /* Outline no grupo: mesma borda do input (não a cor do token), senão o
+       addon fica roxo/verde e o controle cinza — quebra o bloco único. */
+    .input-group > .btn-outline-primary,
+    .input-group > .btn-outline-secondary,
+    .input-group > .btn-outline-success,
+    .input-group > .btn-outline-warning,
+    .input-group > .btn-outline-danger,
+    .input-group > .btn-outline-info {
+        @apply border-border bg-card;
+    }
+
+    /* Variantes do grupo */
+    .input-group-filled > .input-group-text {
+        @apply border-transparent bg-muted/80;
+    }
+
+    .input-group-filled > .input-group-control {
+        @apply border-transparent bg-muted shadow-none;
+    }
+
+    .input-group-flush {
+        @apply rounded-none shadow-none;
+    }
+
+    .input-group-flush > .input-group-text,
+    .input-group-flush > .input-group-control,
+    .input-group-flush > .btn {
+        @apply rounded-none border-0 border-b border-border bg-transparent shadow-none;
+    }
+
+    .input-group-flush > .input-group-text:first-child:not(:only-child),
+    .input-group-flush > .input-group-control:first-child:not(:only-child),
+    .input-group-flush > .btn:first-child:not(:only-child),
+    .input-group-flush > .input-group-text:last-child:not(:only-child),
+    .input-group-flush > .input-group-control:last-child:not(:only-child),
+    .input-group-flush > .btn:last-child:not(:only-child),
+    .input-group-flush > .input-group-text:only-child,
+    .input-group-flush > .input-group-control:only-child,
+    .input-group-flush > .btn:only-child {
+        @apply rounded-none;
+    }
+
+    .input-group-flush:focus-within > .input-group-text,
+    .input-group-flush:focus-within > .input-group-control,
+    .input-group-flush:focus-within > .btn {
+        @apply border-b-2;
+    }
+
+    /* Estados (borda) — aplicados no wrapper e herdados pelos segmentos */
+    .input-group-success > .input-group-text,
+    .input-group-success > .input-group-control,
+    .input-group-success > .btn {
+        @apply border-success;
+    }
+
+    .input-group-warning > .input-group-text,
+    .input-group-warning > .input-group-control,
+    .input-group-warning > .btn {
+        @apply border-warning;
+    }
+
+    .input-group-danger > .input-group-text,
+    .input-group-danger > .input-group-control,
+    .input-group-danger > .btn {
+        @apply border-danger;
+    }
+
+    .input-group-info > .input-group-text,
+    .input-group-info > .input-group-control,
+    .input-group-info > .btn {
+        @apply border-info;
+    }
+
+    /* Tamanhos — texto/controle e botões na mesma altura */
+    .input-group-sm > .input-group-text,
+    .input-group-sm > .input-group-control {
+        @apply h-8 px-2.5 text-xs;
+    }
+
+    .input-group-sm > .btn {
+        @apply gap-1 px-2 text-xs;
+        height: calc(var(--spacing) * 8) !important;
+        min-width: calc(var(--spacing) * 8);
+    }
+
+    .input-group:not(.input-group-sm):not(.input-group-lg) > .input-group-text,
+    .input-group:not(.input-group-sm):not(.input-group-lg) > .input-group-control {
+        @apply h-9.5;
+    }
+
+    .input-group:not(.input-group-sm):not(.input-group-lg) > .btn {
+        @apply px-2.5 text-sm;
+        height: calc(var(--spacing) * 9.5) !important;
+        min-width: calc(var(--spacing) * 9.5);
+    }
+
+    .input-group-lg > .input-group-text,
+    .input-group-lg > .input-group-control {
+        @apply h-11 px-3.5 text-base;
+    }
+
+    .input-group-lg > .btn {
+        @apply gap-2.5 px-3.5 text-base;
+        height: calc(var(--spacing) * 11) !important;
+        min-width: calc(var(--spacing) * 11);
+    }
+
+    /* Pill */
+    .input-group.input-group-rounded > .input-group-text:only-child,
+    .input-group.input-group-rounded > .input-group-control:only-child,
+    .input-group.input-group-rounded > .btn:only-child {
+        @apply rounded-full;
+    }
+
+    .input-group.input-group-rounded > .input-group-text:first-child:not(:only-child),
+    .input-group.input-group-rounded > .input-group-control:first-child:not(:only-child),
+    .input-group.input-group-rounded > .btn:first-child:not(:only-child) {
+        @apply rounded-l-full;
+    }
+
+    .input-group.input-group-rounded > .input-group-text:last-child:not(:only-child),
+    .input-group.input-group-rounded > .input-group-control:last-child:not(:only-child),
+    .input-group.input-group-rounded > .btn:last-child:not(:only-child) {
+        @apply rounded-r-full;
+    }
+
+    .input-group-disabled {
+        @apply pointer-events-none opacity-60;
+    }
+
+    /* Checkbox / radio embutidos no addon de texto */
+    .input-group-text input[type='checkbox'],
+    .input-group-text input[type='radio'] {
+        @apply size-4 shrink-0 accent-primary;
+    }
+
+    /* Botão de ícone "ghost" circular, usado nas ações do topbar (hamburger, tema) */
+    .btn-icon {
+        @apply inline-flex size-9 cursor-pointer items-center justify-center rounded-full border-none
+               text-header-icon shadow-none transition-colors duration-150
+               hover:bg-muted hover:text-foreground;
+    }
+
+    /*
+     * Timeline numerada (<x-ui.timeline numbered>): a numeração vem de um
+     * contador CSS porque <x-ui.timeline.timeline-item> não conhece a própria posição
+     * — mesma filosofia dos seletores odd:/last: usados no componente, sem
+     * índice calculado em PHP nem prop extra em cada item.
+     */
+    .ui-timeline-numbered {
+        counter-reset: ui-timeline-item;
+    }
+
+    .ui-timeline-numbered > li {
+        counter-increment: ui-timeline-item;
+    }
+
+    .ui-timeline-numbered [data-timeline-number]::before {
+        content: counter(ui-timeline-item);
+    }
+
+    /* Mesma técnica acima, para <x-ui.steps numbered> / <x-ui.steps.step-item>. */
+    .ui-steps-numbered {
+        counter-reset: ui-step-item;
+    }
+
+    .ui-steps-numbered > li {
+        counter-increment: ui-step-item;
+    }
+
+    .ui-steps-numbered [data-step-number]::before {
+        content: counter(ui-step-item);
+    }
+
+    /* List group numerado (<x-ui.list numbered>): mesma técnica do timeline/steps. */
+    .ui-list-numbered {
+        counter-reset: ui-list-item;
+        list-style: none;
+        padding-left: 0;
+        margin: 0;
+    }
+
+    .ui-list-numbered > [data-list-item] {
+        counter-increment: ui-list-item;
+    }
+
+    .ui-list-numbered [data-list-number]::before {
+        content: counter(ui-list-item);
+    }
+
+    .ui-list {
+        list-style: none;
+        padding-left: 0;
+        margin: 0;
+    }
+
+    /*
+     * Treeview (<x-ui.treeview lines>): linhas-guia verticais no grupo aninhado.
+     * Usa o token --border do tema — nunca cor Tailwind fixa.
+     */
+    .ui-treeview-lines .ui-treeview-group-lines {
+        position: relative;
+        margin-left: 0.625rem;
+        padding-left: 1rem;
+        border-left: 1px solid var(--border);
+    }
+
+    .ui-treeview-root {
+        list-style: none;
+    }
+
+    .ui-treeview-group {
+        list-style: none;
+    }
+
+    /*
+     * Skeleton shimmer (<x-ui.skeleton animation="shimmer">): varre um highlight
+     * sobre bg-muted usando tokens do tema — o pulse usa animate-pulse do Tailwind.
+     */
+    .ui-skeleton-shimmer {
+        background-color: var(--muted);
+        background-image: linear-gradient(
+            90deg,
+            transparent 0%,
+            color-mix(in oklab, var(--muted-foreground) 14%, transparent) 50%,
+            transparent 100%
+        );
+        background-size: 200% 100%;
+        animation: ui-skeleton-shimmer 1.4s ease-in-out infinite;
+    }
+
+    @keyframes ui-skeleton-shimmer {
+        0% {
+            background-position: 200% 0;
+        }
+
+        100% {
+            background-position: -200% 0;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .ui-skeleton-shimmer {
+            animation: none;
+            background-image: none;
+        }
+    }
+
+    /*
+     * Image Mask (<x-ui.image-mask>): recorta o conteúdo (img ou bloco) em
+     * formas via CSS mask-image (+ -webkit- para Safari). SVGs alinhados ao
+     * padrão de mask. half-1/half-2 dobram o mask-size e deslocam a
+     * posição para mostrar só metade da forma.
+     */
+    .ui-image-mask {
+        display: inline-block;
+        vertical-align: middle;
+        flex-shrink: 0;
+        aspect-ratio: 1 / 1;
+        object-fit: cover;
+        -webkit-mask-position: 50% 50%;
+        mask-position: 50% 50%;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+    }
+
+    .ui-image-mask-half-1 {
+        -webkit-mask-position: 0% 50%;
+        mask-position: 0% 50%;
+        -webkit-mask-size: 200% 200%;
+        mask-size: 200% 200%;
+    }
+
+    .ui-image-mask-half-1:where(:dir(rtl), [dir='rtl'], [dir='rtl'] *) {
+        -webkit-mask-position: 100% 50%;
+        mask-position: 100% 50%;
+    }
+
+    .ui-image-mask-half-2 {
+        -webkit-mask-position: 100% 50%;
+        mask-position: 100% 50%;
+        -webkit-mask-size: 200% 200%;
+        mask-size: 200% 200%;
+    }
+
+    .ui-image-mask-half-2:where(:dir(rtl), [dir='rtl'], [dir='rtl'] *) {
+        -webkit-mask-position: 0% 50%;
+        mask-position: 0% 50%;
+    }
+
+    .ui-image-mask-squircle {
+        -webkit-mask-image: url("data:image/svg+xml,%3csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M100 0C20 0 0 20 0 100s20 100 100 100 100-20 100-100S180 0 100 0Z'/%3e%3c/svg%3e");
+        mask-image: url("data:image/svg+xml,%3csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M100 0C20 0 0 20 0 100s20 100 100 100 100-20 100-100S180 0 100 0Z'/%3e%3c/svg%3e");
+    }
+
+    .ui-image-mask-heart {
+        -webkit-mask-image: url("data:image/svg+xml,%3csvg width='200' height='185' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M100 184.606a15.384 15.384 0 0 1-8.653-2.678C53.565 156.28 37.205 138.695 28.182 127.7 8.952 104.264-.254 80.202.005 54.146.308 24.287 24.264 0 53.406 0c21.192 0 35.869 11.937 44.416 21.879a2.884 2.884 0 0 0 4.356 0C110.725 11.927 125.402 0 146.594 0c29.142 0 53.098 24.287 53.4 54.151.26 26.061-8.956 50.122-28.176 73.554-9.023 10.994-25.383 28.58-63.165 54.228a15.384 15.384 0 0 1-8.653 2.673Z' fill='black' fill-rule='nonzero'/%3e%3c/svg%3e");
+        mask-image: url("data:image/svg+xml,%3csvg width='200' height='185' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M100 184.606a15.384 15.384 0 0 1-8.653-2.678C53.565 156.28 37.205 138.695 28.182 127.7 8.952 104.264-.254 80.202.005 54.146.308 24.287 24.264 0 53.406 0c21.192 0 35.869 11.937 44.416 21.879a2.884 2.884 0 0 0 4.356 0C110.725 11.927 125.402 0 146.594 0c29.142 0 53.098 24.287 53.4 54.151.26 26.061-8.956 50.122-28.176 73.554-9.023 10.994-25.383 28.58-63.165 54.228a15.384 15.384 0 0 1-8.653 2.673Z' fill='black' fill-rule='nonzero'/%3e%3c/svg%3e");
+    }
+
+    .ui-image-mask-hexagon {
+        -webkit-mask-image: url("data:image/svg+xml,%3csvg width='182' height='201' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M.3 65.486c0-9.196 6.687-20.063 14.211-25.078l61.86-35.946c8.36-5.016 20.899-5.016 29.258 0l61.86 35.946c8.36 5.015 14.211 15.882 14.211 25.078v71.055c0 9.196-6.687 20.063-14.211 25.079l-61.86 35.945c-8.36 4.18-20.899 4.18-29.258 0L14.51 161.62C6.151 157.44.3 145.737.3 136.54V65.486Z' fill='black' fill-rule='nonzero'/%3e%3c/svg%3e");
+        mask-image: url("data:image/svg+xml,%3csvg width='182' height='201' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M.3 65.486c0-9.196 6.687-20.063 14.211-25.078l61.86-35.946c8.36-5.016 20.899-5.016 29.258 0l61.86 35.946c8.36 5.015 14.211 15.882 14.211 25.078v71.055c0 9.196-6.687 20.063-14.211 25.079l-61.86 35.945c-8.36 4.18-20.899 4.18-29.258 0L14.51 161.62C6.151 157.44.3 145.737.3 136.54V65.486Z' fill='black' fill-rule='nonzero'/%3e%3c/svg%3e");
+    }
+
+    .ui-image-mask-hexagon-2 {
+        -webkit-mask-image: url("data:image/svg+xml,%3csvg width='200' height='182' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M64.786 181.4c-9.196 0-20.063-6.687-25.079-14.21L3.762 105.33c-5.016-8.36-5.016-20.9 0-29.259l35.945-61.86C44.723 5.851 55.59 0 64.786 0h71.055c9.196 0 20.063 6.688 25.079 14.211l35.945 61.86c4.18 8.36 4.18 20.899 0 29.258l-35.945 61.86c-4.18 8.36-15.883 14.211-25.079 14.211H64.786Z' fill='black' fill-rule='nonzero'/%3e%3c/svg%3e");
+        mask-image: url("data:image/svg+xml,%3csvg width='200' height='182' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M64.786 181.4c-9.196 0-20.063-6.687-25.079-14.21L3.762 105.33c-5.016-8.36-5.016-20.9 0-29.259l35.945-61.86C44.723 5.851 55.59 0 64.786 0h71.055c9.196 0 20.063 6.688 25.079 14.211l35.945 61.86c4.18 8.36 4.18 20.899 0 29.258l-35.945 61.86c-4.18 8.36-15.883 14.211-25.079 14.211H64.786Z' fill='black' fill-rule='nonzero'/%3e%3c/svg%3e");
+    }
+
+    .ui-image-mask-decagon {
+        -webkit-mask-image: url("data:image/svg+xml,%3csvg width='192' height='200' xmlns='http://www.w3.org/2000/svg'%3e%3cpath fill='black' d='m96 0 58.779 19.098 36.327 50v61.804l-36.327 50L96 200l-58.779-19.098-36.327-50V69.098l36.327-50z' fill-rule='evenodd'/%3e%3c/svg%3e");
+        mask-image: url("data:image/svg+xml,%3csvg width='192' height='200' xmlns='http://www.w3.org/2000/svg'%3e%3cpath fill='black' d='m96 0 58.779 19.098 36.327 50v61.804l-36.327 50L96 200l-58.779-19.098-36.327-50V69.098l36.327-50z' fill-rule='evenodd'/%3e%3c/svg%3e");
+    }
+
+    .ui-image-mask-pentagon {
+        -webkit-mask-image: url("data:image/svg+xml,%3csvg width='192' height='181' xmlns='http://www.w3.org/2000/svg'%3e%3cpath fill='black' d='m96 0 95.106 69.098-36.327 111.804H37.22L.894 69.098z' fill-rule='evenodd'/%3e%3c/svg%3e");
+        mask-image: url("data:image/svg+xml,%3csvg width='192' height='181' xmlns='http://www.w3.org/2000/svg'%3e%3cpath fill='black' d='m96 0 95.106 69.098-36.327 111.804H37.22L.894 69.098z' fill-rule='evenodd'/%3e%3c/svg%3e");
+    }
+
+    .ui-image-mask-diamond {
+        -webkit-mask-image: url("data:image/svg+xml,%3csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3e%3cpath fill='black' d='m100 0 100 100-100 100L0 100z' fill-rule='evenodd'/%3e%3c/svg%3e");
+        mask-image: url("data:image/svg+xml,%3csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3e%3cpath fill='black' d='m100 0 100 100-100 100L0 100z' fill-rule='evenodd'/%3e%3c/svg%3e");
+    }
+
+    .ui-image-mask-square {
+        -webkit-mask-image: url("data:image/svg+xml,%3csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3e%3crect fill='black' width='200' height='200' fill-rule='evenodd'/%3e%3c/svg%3e");
+        mask-image: url("data:image/svg+xml,%3csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3e%3crect fill='black' width='200' height='200' fill-rule='evenodd'/%3e%3c/svg%3e");
+    }
+
+    .ui-image-mask-circle {
+        -webkit-mask-image: url("data:image/svg+xml,%3csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3e%3ccircle fill='black' cx='100' cy='100' r='100' fill-rule='evenodd'/%3e%3c/svg%3e");
+        mask-image: url("data:image/svg+xml,%3csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3e%3ccircle fill='black' cx='100' cy='100' r='100' fill-rule='evenodd'/%3e%3c/svg%3e");
+    }
+
+    .ui-image-mask-star {
+        -webkit-mask-image: url("data:image/svg+xml,%3csvg width='192' height='180' xmlns='http://www.w3.org/2000/svg'%3e%3cpath fill='black' d='m96 137.263-58.779 42.024 22.163-68.389L.894 68.481l72.476-.243L96 0l22.63 68.238 72.476.243-58.49 42.417 22.163 68.389z' fill-rule='evenodd'/%3e%3c/svg%3e");
+        mask-image: url("data:image/svg+xml,%3csvg width='192' height='180' xmlns='http://www.w3.org/2000/svg'%3e%3cpath fill='black' d='m96 137.263-58.779 42.024 22.163-68.389L.894 68.481l72.476-.243L96 0l22.63 68.238 72.476.243-58.49 42.417 22.163 68.389z' fill-rule='evenodd'/%3e%3c/svg%3e");
+    }
+
+    .ui-image-mask-star-2 {
+        -webkit-mask-image: url("data:image/svg+xml,%3csvg width='192' height='180' xmlns='http://www.w3.org/2000/svg'%3e%3cpath fill='black' d='m96 153.044-58.779 26.243 7.02-63.513L.894 68.481l63.117-13.01L96 0l31.989 55.472 63.117 13.01-43.347 47.292 7.02 63.513z' fill-rule='evenodd'/%3e%3c/svg%3e");
+        mask-image: url("data:image/svg+xml,%3csvg width='192' height='180' xmlns='http://www.w3.org/2000/svg'%3e%3cpath fill='black' d='m96 153.044-58.779 26.243 7.02-63.513L.894 68.481l63.117-13.01L96 0l31.989 55.472 63.117 13.01-43.347 47.292 7.02 63.513z' fill-rule='evenodd'/%3e%3c/svg%3e");
+    }
+
+    .ui-image-mask-triangle {
+        -webkit-mask-image: url("data:image/svg+xml,%3csvg width='174' height='149' xmlns='http://www.w3.org/2000/svg'%3e%3cpath fill='black' d='m87 148.476-86.603.185L43.86 74.423 87 0l43.14 74.423 43.463 74.238z' fill-rule='evenodd'/%3e%3c/svg%3e");
+        mask-image: url("data:image/svg+xml,%3csvg width='174' height='149' xmlns='http://www.w3.org/2000/svg'%3e%3cpath fill='black' d='m87 148.476-86.603.185L43.86 74.423 87 0l43.14 74.423 43.463 74.238z' fill-rule='evenodd'/%3e%3c/svg%3e");
+    }
+
+    .ui-image-mask-triangle-2 {
+        -webkit-mask-image: url("data:image/svg+xml,%3csvg width='174' height='150' xmlns='http://www.w3.org/2000/svg'%3e%3cpath fill='black' d='m87 .738 86.603-.184-43.463 74.238L87 149.214 43.86 74.792.397.554z' fill-rule='evenodd'/%3e%3c/svg%3e");
+        mask-image: url("data:image/svg+xml,%3csvg width='174' height='150' xmlns='http://www.w3.org/2000/svg'%3e%3cpath fill='black' d='m87 .738 86.603-.184-43.463 74.238L87 149.214 43.86 74.792.397.554z' fill-rule='evenodd'/%3e%3c/svg%3e");
+    }
+
+    .ui-image-mask-triangle-3 {
+        -webkit-mask-image: url("data:image/svg+xml,%3csvg width='150' height='174' xmlns='http://www.w3.org/2000/svg'%3e%3cpath fill='black' d='m149.369 87.107.185 86.603-74.239-43.463L.893 87.107l74.422-43.14L149.554.505z' fill-rule='evenodd'/%3e%3c/svg%3e");
+        mask-image: url("data:image/svg+xml,%3csvg width='150' height='174' xmlns='http://www.w3.org/2000/svg'%3e%3cpath fill='black' d='m149.369 87.107.185 86.603-74.239-43.463L.893 87.107l74.422-43.14L149.554.505z' fill-rule='evenodd'/%3e%3c/svg%3e");
+    }
+
+    .ui-image-mask-triangle-4 {
+        -webkit-mask-image: url("data:image/svg+xml,%3csvg width='150' height='174' xmlns='http://www.w3.org/2000/svg'%3e%3cpath fill='black' d='M.631 87.107.446.505l74.239 43.462 74.422 43.14-74.422 43.14L.446 173.71z' fill-rule='evenodd'/%3e%3c/svg%3e");
+        mask-image: url("data:image/svg+xml,%3csvg width='150' height='174' xmlns='http://www.w3.org/2000/svg'%3e%3cpath fill='black' d='M.631 87.107.446.505l74.239 43.462 74.422 43.14-74.422 43.14L.446 173.71z' fill-rule='evenodd'/%3e%3c/svg%3e");
+    }
+
+    /*
+     * Progress (<x-ui.progress>): faixa striped, animação das listras,
+     * transição de largura e estado indeterminado. Tokens do tema; respeita
+     * prefers-reduced-motion.
+     */
+    .ui-progress-bar-striped {
+        background-image: linear-gradient(
+            45deg,
+            rgba(255, 255, 255, 0.18) 25%,
+            transparent 25%,
+            transparent 50%,
+            rgba(255, 255, 255, 0.18) 50%,
+            rgba(255, 255, 255, 0.18) 75%,
+            transparent 75%,
+            transparent
+        );
+        background-size: 1rem 1rem;
+    }
+
+    .ui-progress-bar-animated {
+        animation: ui-progress-stripes 1s linear infinite;
+    }
+
+    .ui-progress-grow .ui-progress-bar {
+        transition: width 0.6s ease;
+    }
+
+    .ui-progress-indeterminate .ui-progress-bar {
+        width: 40% !important;
+        animation: ui-progress-indeterminate 1.4s ease-in-out infinite;
+    }
+
+    .ui-progress-circle-track {
+        stroke: color-mix(in oklab, var(--muted) 100%, transparent);
+    }
+
+    @keyframes ui-progress-stripes {
+        from {
+            background-position: 1rem 0;
+        }
+
+        to {
+            background-position: 0 0;
+        }
+    }
+
+    @keyframes ui-progress-indeterminate {
+        0% {
+            transform: translateX(-100%);
+        }
+
+        50% {
+            transform: translateX(150%);
+        }
+
+        100% {
+            transform: translateX(-100%);
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .ui-progress-bar-animated,
+        .ui-progress-indeterminate .ui-progress-bar {
+            animation: none;
+        }
+
+        .ui-progress-grow .ui-progress-bar {
+            transition: none;
+        }
+    }
+
+    /*
+     * Spinner (<x-ui.spinner>): variantes de loading CSS.
+     * Usa --ui-spinner-size / --ui-spinner-color / --ui-spinner-speed /
+     * --ui-spinner-stroke. Respeita prefers-reduced-motion.
+     */
+    .ui-spinner {
+        --ui-spinner-size: 32px;
+        --ui-spinner-color: var(--primary);
+        --ui-spinner-speed: 1.2s;
+        --ui-spinner-stroke: 3.5px;
+    }
+
+    .ui-spinner-visual {
+        position: relative;
+        display: inline-flex;
+        flex-shrink: 0;
+        align-items: center;
+        justify-content: center;
+        width: var(--ui-spinner-size);
+        height: var(--ui-spinner-size);
+        color: var(--ui-spinner-color);
+    }
+
+    /* ring — SVG stroke dash  */
+    .ui-spinner-ring .ui-spinner-ring-svg {
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+        transform-origin: center;
+        animation: ui-spinner-rotate var(--ui-spinner-speed) linear infinite;
+    }
+
+    .ui-spinner-ring-track,
+    .ui-spinner-ring-car {
+        fill: none;
+        stroke: currentColor;
+        stroke-width: var(--ui-spinner-stroke);
+        vector-effect: non-scaling-stroke;
+    }
+
+    .ui-spinner-ring-track {
+        opacity: 0.2;
+    }
+
+    .ui-spinner-ring-car {
+        stroke-linecap: round;
+        stroke-dasharray: 1, 200;
+        animation: ui-spinner-ring-stretch calc(var(--ui-spinner-speed) * 0.75) ease-in-out infinite;
+    }
+
+    /* ring-2 — dois anéis em sentidos opostos */
+    .ui-spinner-ring-2 .ui-spinner-ring2-outer,
+    .ui-spinner-ring-2 .ui-spinner-ring2-inner {
+        position: absolute;
+        inset: 0;
+        border-radius: 9999px;
+        border: var(--ui-spinner-stroke) solid transparent;
+        border-top-color: currentColor;
+        border-right-color: currentColor;
+    }
+
+    .ui-spinner-ring-2 .ui-spinner-ring2-outer {
+        animation: ui-spinner-rotate var(--ui-spinner-speed) linear infinite;
+    }
+
+    .ui-spinner-ring-2 .ui-spinner-ring2-inner {
+        inset: 22%;
+        opacity: 0.45;
+        border-top-color: transparent;
+        border-left-color: currentColor;
+        animation: ui-spinner-rotate-rev calc(var(--ui-spinner-speed) * 0.85) linear infinite;
+    }
+
+    /* tailspin — disco com borda aberta */
+    .ui-spinner-tailspin .ui-spinner-tailspin-disc {
+        box-sizing: border-box;
+        width: 100%;
+        height: 100%;
+        border-radius: 9999px;
+        border: var(--ui-spinner-stroke) solid color-mix(in oklab, currentColor 20%, transparent);
+        border-top-color: currentColor;
+        animation: ui-spinner-rotate var(--ui-spinner-speed) linear infinite;
+    }
+
+    /* line — raios rotativos */
+    .ui-spinner-line {
+        animation: ui-spinner-rotate var(--ui-spinner-speed) linear infinite;
+    }
+
+    .ui-spinner-line .ui-spinner-part {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: var(--ui-spinner-stroke);
+        height: 28%;
+        border-radius: 9999px;
+        background: currentColor;
+        transform-origin: center calc(var(--ui-spinner-size) * -0.22);
+        transform: rotate(calc(var(--i) * 30deg)) translateY(calc(var(--ui-spinner-size) * -0.36));
+        opacity: calc(0.15 + (var(--i) * 0.07));
+    }
+
+    /* dots — 8 pontos orbitando com fade */
+    .ui-spinner-dots {
+        animation: ui-spinner-rotate var(--ui-spinner-speed) linear infinite;
+    }
+
+    .ui-spinner-dots .ui-spinner-part {
+        --dot: calc(var(--ui-spinner-size) * 0.18);
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: var(--dot);
+        height: var(--dot);
+        margin: calc(var(--dot) / -2);
+        border-radius: 9999px;
+        background: currentColor;
+        transform: rotate(calc(var(--i) * 45deg)) translateY(calc(var(--ui-spinner-size) * -0.38));
+        opacity: calc(0.2 + (var(--i) * 0.1));
+    }
+
+    /* orbit — núcleo fixo + satélite orbitando */
+    .ui-spinner-orbit::before {
+        content: '';
+        position: absolute;
+        inset: 32%;
+        border-radius: 9999px;
+        background: currentColor;
+        opacity: 0.3;
+    }
+
+    .ui-spinner-orbit .ui-spinner-part {
+        --dot: calc(var(--ui-spinner-size) * 0.22);
+        position: absolute;
+        top: 0;
+        left: 50%;
+        width: var(--dot);
+        height: var(--dot);
+        margin-left: calc(var(--dot) / -2);
+        border-radius: 9999px;
+        background: currentColor;
+        transform-origin: center calc(var(--ui-spinner-size) / 2);
+        animation: ui-spinner-rotate var(--ui-spinner-speed) linear infinite;
+    }
+
+    /* dot-pulse — 3 dots escalando  */
+    .ui-spinner-dot-pulse {
+        width: var(--ui-spinner-size);
+        height: calc(var(--ui-spinner-size) * 0.28);
+        gap: 0;
+        justify-content: space-between;
+    }
+
+    .ui-spinner-dot-pulse .ui-spinner-part {
+        width: calc(var(--ui-spinner-size) * 0.24);
+        height: calc(var(--ui-spinner-size) * 0.24);
+        border-radius: 9999px;
+        background: currentColor;
+        animation: ui-spinner-dot-pulse var(--ui-spinner-speed) ease-in-out infinite;
+        animation-delay: calc(var(--ui-spinner-speed) * (var(--i) - 1.5) * 0.125);
+    }
+
+    /* dot-wave — 5 dots saltitando */
+    .ui-spinner-dot-wave {
+        width: var(--ui-spinner-size);
+        height: var(--ui-spinner-size);
+        align-items: flex-end;
+        justify-content: space-between;
+    }
+
+    .ui-spinner-dot-wave .ui-spinner-part {
+        width: calc(var(--ui-spinner-size) * 0.14);
+        height: calc(var(--ui-spinner-size) * 0.14);
+        border-radius: 9999px;
+        background: currentColor;
+        animation: ui-spinner-dot-wave var(--ui-spinner-speed) ease-in-out infinite;
+        animation-delay: calc(var(--ui-spinner-speed) * var(--i) * -0.12);
+    }
+
+    /* bars / waveform  */
+    .ui-spinner-bars {
+        width: var(--ui-spinner-size);
+        height: calc(var(--ui-spinner-size) * 0.9);
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .ui-spinner-bars .ui-spinner-part {
+        width: var(--ui-spinner-stroke);
+        height: 100%;
+        border-radius: 9999px;
+        background: currentColor;
+        animation: ui-spinner-bars var(--ui-spinner-speed) ease-in-out infinite;
+        animation-delay: calc(var(--ui-spinner-speed) * (var(--i) - 3) * 0.15);
+    }
+
+    /* bounce — 3 bolas quicando */
+    .ui-spinner-bounce {
+        width: var(--ui-spinner-size);
+        height: var(--ui-spinner-size);
+        justify-content: space-between;
+        align-items: flex-end;
+    }
+
+    .ui-spinner-bounce .ui-spinner-part {
+        width: calc(var(--ui-spinner-size) * 0.26);
+        height: calc(var(--ui-spinner-size) * 0.26);
+        border-radius: 9999px;
+        background: currentColor;
+        animation: ui-spinner-bounce var(--ui-spinner-speed) ease-in-out infinite;
+        animation-delay: calc(var(--ui-spinner-speed) * var(--i) * -0.16);
+    }
+
+    /* grid — 3×3 */
+    .ui-spinner-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: repeat(3, 1fr);
+        gap: 12%;
+        width: var(--ui-spinner-size);
+        height: var(--ui-spinner-size);
+    }
+
+    .ui-spinner-grid .ui-spinner-part {
+        width: 100%;
+        height: 100%;
+        border-radius: 20%;
+        background: currentColor;
+        animation: ui-spinner-grid var(--ui-spinner-speed) ease-in-out infinite;
+        animation-delay: calc(var(--ui-spinner-speed) * var(--i) * -0.08);
+    }
+
+    /* pulse — núcleo + anel expandindo */
+    .ui-spinner-pulse .ui-spinner-pulse-core {
+        position: absolute;
+        inset: 32%;
+        border-radius: 9999px;
+        background: currentColor;
+        animation: ui-spinner-pulse-core var(--ui-spinner-speed) ease-in-out infinite;
+    }
+
+    .ui-spinner-pulse .ui-spinner-pulse-ring {
+        position: absolute;
+        inset: 0;
+        border-radius: 9999px;
+        border: var(--ui-spinner-stroke) solid currentColor;
+        animation: ui-spinner-pulse-ring var(--ui-spinner-speed) ease-out infinite;
+    }
+
+    /* ripples — ondas concêntricas */
+    .ui-spinner-ripples .ui-spinner-part {
+        position: absolute;
+        inset: 0;
+        border-radius: 9999px;
+        border: var(--ui-spinner-stroke) solid currentColor;
+        opacity: 0;
+        animation: ui-spinner-ripples calc(var(--ui-spinner-speed) * 1.4) cubic-bezier(0, 0.2, 0.8, 1) infinite;
+        animation-delay: calc(var(--i) * (var(--ui-spinner-speed) * 0.45));
+    }
+
+    /* hourglass — losango girando */
+    .ui-spinner-hourglass .ui-spinner-hourglass-shape {
+        width: 55%;
+        height: 55%;
+        background: currentColor;
+        clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+        animation: ui-spinner-hourglass var(--ui-spinner-speed) ease-in-out infinite;
+    }
+
+    /* zoomies — barra deslizando */
+    .ui-spinner-zoomies {
+        width: calc(var(--ui-spinner-size) * 1.6);
+        height: calc(var(--ui-spinner-size) * 0.22);
+    }
+
+    .ui-spinner-zoomies .ui-spinner-zoomies-track {
+        position: relative;
+        display: block;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        border-radius: 9999px;
+        background: color-mix(in oklab, currentColor 15%, transparent);
+    }
+
+    .ui-spinner-zoomies .ui-spinner-zoomies-bar {
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 40%;
+        border-radius: 9999px;
+        background: currentColor;
+        animation: ui-spinner-zoomies var(--ui-spinner-speed) ease-in-out infinite;
+    }
+
+    /* mirage — barras horizontais em fade */
+    .ui-spinner-mirage {
+        flex-direction: column;
+        width: var(--ui-spinner-size);
+        height: calc(var(--ui-spinner-size) * 0.55);
+        justify-content: space-between;
+    }
+
+    .ui-spinner-mirage .ui-spinner-part {
+        width: 100%;
+        height: var(--ui-spinner-stroke);
+        border-radius: 9999px;
+        background: currentColor;
+        animation: ui-spinner-mirage var(--ui-spinner-speed) ease-in-out infinite;
+        animation-delay: calc(var(--ui-spinner-speed) * var(--i) * -0.2);
+    }
+
+    /* square — quadrado rotacionando + scale */
+    .ui-spinner-square .ui-spinner-square-shape {
+        width: 62%;
+        height: 62%;
+        border-radius: 18%;
+        background: currentColor;
+        animation: ui-spinner-square var(--ui-spinner-speed) ease-in-out infinite;
+    }
+
+    /* hatch — caixa com linhas diagonais animadas */
+    .ui-spinner-hatch .ui-spinner-hatch-box {
+        width: 72%;
+        height: 72%;
+        border-radius: 12%;
+        background:
+            repeating-linear-gradient(
+                -45deg,
+                currentColor 0,
+                currentColor 2px,
+                transparent 2px,
+                transparent 6px
+            );
+        background-size: 200% 200%;
+        animation: ui-spinner-hatch var(--ui-spinner-speed) linear infinite;
+        opacity: 0.9;
+    }
+
+    @keyframes ui-spinner-rotate {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    @keyframes ui-spinner-rotate-rev {
+        to {
+            transform: rotate(-360deg);
+        }
+    }
+
+    @keyframes ui-spinner-ring-stretch {
+        0% {
+            stroke-dasharray: 1, 150;
+            stroke-dashoffset: 0;
+        }
+
+        50% {
+            stroke-dasharray: 90, 150;
+            stroke-dashoffset: -35;
+        }
+
+        100% {
+            stroke-dasharray: 90, 150;
+            stroke-dashoffset: -124;
+        }
+    }
+
+    @keyframes ui-spinner-dot-pulse {
+        0%,
+        100% {
+            transform: scale(0);
+        }
+
+        50% {
+            transform: scale(1);
+        }
+    }
+
+    @keyframes ui-spinner-dot-wave {
+        0%,
+        100% {
+            transform: translateY(0);
+        }
+
+        50% {
+            transform: translateY(calc(var(--ui-spinner-size) * -0.55));
+        }
+    }
+
+    @keyframes ui-spinner-bars {
+        0%,
+        100% {
+            transform: scaleY(0.3);
+        }
+
+        50% {
+            transform: scaleY(1);
+        }
+    }
+
+    @keyframes ui-spinner-bounce {
+        0%,
+        100% {
+            transform: translateY(0);
+            animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+        }
+
+        50% {
+            transform: translateY(calc(var(--ui-spinner-size) * -0.55));
+            animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+        }
+    }
+
+    @keyframes ui-spinner-grid {
+        0%,
+        100% {
+            opacity: 0.25;
+            transform: scale(0.6);
+        }
+
+        50% {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    @keyframes ui-spinner-pulse-core {
+        0%,
+        100% {
+            transform: scale(0.85);
+        }
+
+        50% {
+            transform: scale(1);
+        }
+    }
+
+    @keyframes ui-spinner-pulse-ring {
+        0% {
+            transform: scale(0.55);
+            opacity: 0.8;
+        }
+
+        100% {
+            transform: scale(1);
+            opacity: 0;
+        }
+    }
+
+    @keyframes ui-spinner-ripples {
+        0% {
+            transform: scale(0.2);
+            opacity: 0.7;
+        }
+
+        100% {
+            transform: scale(1);
+            opacity: 0;
+        }
+    }
+
+    @keyframes ui-spinner-hourglass {
+        0% {
+            transform: rotate(0deg) scaleY(1);
+        }
+
+        50% {
+            transform: rotate(180deg) scaleY(0.7);
+        }
+
+        100% {
+            transform: rotate(360deg) scaleY(1);
+        }
+    }
+
+    @keyframes ui-spinner-zoomies {
+        0% {
+            transform: translateX(-100%);
+        }
+
+        50% {
+            transform: translateX(160%);
+        }
+
+        100% {
+            transform: translateX(-100%);
+        }
+    }
+
+    @keyframes ui-spinner-mirage {
+        0%,
+        100% {
+            opacity: 0.2;
+            transform: scaleX(0.55);
+        }
+
+        50% {
+            opacity: 1;
+            transform: scaleX(1);
+        }
+    }
+
+    @keyframes ui-spinner-square {
+        0% {
+            transform: rotate(0deg) scale(0.85);
+        }
+
+        50% {
+            transform: rotate(90deg) scale(1);
+        }
+
+        100% {
+            transform: rotate(180deg) scale(0.85);
+        }
+    }
+
+    @keyframes ui-spinner-hatch {
+        to {
+            background-position: 100% 100%;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .ui-spinner-visual,
+        .ui-spinner-visual *,
+        .ui-spinner-visual *::before,
+        .ui-spinner-visual *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+        }
+    }
+
+    /*
+     * Placeholder (<x-ui.placeholder>): barras estilo do design system
+     * (glow + wave). Distinto de <x-ui.skeleton> (layouts compostos).
+     * Respeita prefers-reduced-motion.
+     */
+    .ui-placeholder {
+        display: inline-block;
+        min-height: 1em;
+        vertical-align: middle;
+        cursor: wait;
+        background-color: var(--muted);
+        opacity: 0.65;
+    }
+
+    .ui-placeholder-solid {
+        opacity: 1;
+    }
+
+    .ui-placeholder-glow {
+        animation: ui-placeholder-glow 2s ease-in-out infinite;
+    }
+
+    .ui-placeholder-wave {
+        -webkit-mask-image: linear-gradient(
+            130deg,
+            #000 55%,
+            rgba(0, 0, 0, 0.25) 75%,
+            #000 95%
+        );
+        mask-image: linear-gradient(
+            130deg,
+            #000 55%,
+            rgba(0, 0, 0, 0.25) 75%,
+            #000 95%
+        );
+        -webkit-mask-size: 200% 100%;
+        mask-size: 200% 100%;
+        animation: ui-placeholder-wave 2s linear infinite;
+    }
+
+    @keyframes ui-placeholder-glow {
+        50% {
+            opacity: 0.25;
+        }
+    }
+
+    @keyframes ui-placeholder-wave {
+        100% {
+            -webkit-mask-position: -100% 0%;
+            mask-position: -100% 0%;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .ui-placeholder-glow,
+        .ui-placeholder-wave {
+            animation: none;
+            -webkit-mask-image: none;
+            mask-image: none;
+            opacity: 0.55;
+        }
+    }
+
+    /*
+     * <x-ui.scroll> — viewport com scrollbar tematizada, fades/sombras de
+     * borda e botões de atalho. Tokens via --ui-scroll-*.
+     */
+    .ui-scroll {
+        --ui-scroll-height: 16rem;
+        --ui-scroll-thumb: var(--muted-foreground);
+        height: var(--ui-scroll-height);
+        max-height: var(--ui-scroll-max-height, none);
+        max-width: var(--ui-scroll-max-width, none);
+    }
+
+    .ui-scroll-horizontal {
+        width: 100%;
+    }
+
+    .ui-scroll-frame {
+        flex: 1 1 auto;
+        min-height: 0;
+        min-width: 0;
+    }
+
+    .ui-scroll-viewport {
+        scrollbar-color: color-mix(in oklab, var(--ui-scroll-thumb) 55%, transparent) transparent;
+    }
+
+    .ui-scroll-bar-thin {
+        scrollbar-width: thin;
+    }
+
+    .ui-scroll-bar-auto {
+        scrollbar-width: auto;
+    }
+
+    .ui-scroll-bar-hidden {
+        scrollbar-width: none;
+    }
+
+    .ui-scroll-bar-hidden::-webkit-scrollbar {
+        display: none;
+    }
+
+    .ui-scroll-bar-thin::-webkit-scrollbar,
+    .ui-scroll-bar-auto::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    .ui-scroll-bar-auto::-webkit-scrollbar {
+        width: 12px;
+        height: 12px;
+    }
+
+    .ui-scroll-viewport::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .ui-scroll-viewport::-webkit-scrollbar-thumb {
+        border-radius: 9999px;
+        background: color-mix(in oklab, var(--ui-scroll-thumb) 45%, transparent);
+        border: 2px solid transparent;
+        background-clip: content-box;
+    }
+
+    .ui-scroll-viewport::-webkit-scrollbar-thumb:hover {
+        background: color-mix(in oklab, var(--ui-scroll-thumb) 70%, transparent);
+        background-clip: content-box;
+    }
+
+    .ui-scroll-fade {
+        transition: opacity 150ms ease;
+    }
+
+    .ui-scroll:not(.ui-scroll-horizontal) .ui-scroll-fade-start {
+        inset: 0 0 auto 0;
+        height: 2rem;
+        background: linear-gradient(to bottom, var(--card), transparent);
+    }
+
+    .ui-scroll:not(.ui-scroll-horizontal) .ui-scroll-fade-end {
+        inset: auto 0 0 0;
+        height: 2rem;
+        background: linear-gradient(to top, var(--card), transparent);
+    }
+
+    .ui-scroll-horizontal .ui-scroll-fade-start {
+        inset: 0 auto 0 0;
+        width: 2rem;
+        background: linear-gradient(to right, var(--card), transparent);
+    }
+
+    .ui-scroll-horizontal .ui-scroll-fade-end {
+        inset: 0 0 0 auto;
+        width: 2rem;
+        background: linear-gradient(to left, var(--card), transparent);
+    }
+
+    .ui-scroll-both .ui-scroll-fade-start {
+        inset: 0 0 auto 0;
+        height: 2rem;
+        background: linear-gradient(to bottom, var(--card), transparent);
+    }
+
+    .ui-scroll-both .ui-scroll-fade-end {
+        inset: auto 0 0 0;
+        height: 2rem;
+        background: linear-gradient(to top, var(--card), transparent);
+    }
+
+    .ui-scroll:not(.ui-scroll-horizontal) .ui-scroll-shadow-start {
+        inset: 0 0 auto 0;
+        height: 0.75rem;
+        box-shadow: inset 0 10px 10px -10px color-mix(in oklab, var(--foreground) 18%, transparent);
+    }
+
+    .ui-scroll:not(.ui-scroll-horizontal) .ui-scroll-shadow-end {
+        inset: auto 0 0 0;
+        height: 0.75rem;
+        box-shadow: inset 0 -10px 10px -10px color-mix(in oklab, var(--foreground) 18%, transparent);
+    }
+
+    .ui-scroll-horizontal .ui-scroll-shadow-start {
+        inset: 0 auto 0 0;
+        width: 0.75rem;
+        box-shadow: inset 10px 0 10px -10px color-mix(in oklab, var(--foreground) 18%, transparent);
+    }
+
+    .ui-scroll-horizontal .ui-scroll-shadow-end {
+        inset: 0 0 0 auto;
+        width: 0.75rem;
+        box-shadow: inset -10px 0 10px -10px color-mix(in oklab, var(--foreground) 18%, transparent);
+    }
+
+    .ui-scroll:not(.ui-scroll-horizontal) .ui-scroll-btn-start {
+        top: 0.5rem;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .ui-scroll:not(.ui-scroll-horizontal) .ui-scroll-btn-end {
+        bottom: 0.5rem;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .ui-scroll-horizontal .ui-scroll-btn-start {
+        left: 0.5rem;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    .ui-scroll-horizontal .ui-scroll-btn-end {
+        right: 0.5rem;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .ui-scroll-viewport.scroll-smooth {
+            scroll-behavior: auto;
+        }
+
+        .ui-scroll-fade {
+            transition: none;
+        }
+    }
+
+    /*
+     * <x-ui.code-editor> — bloco de código com Shiki (https://shiki.style/).
+     * O <pre class="shiki"> mantém background/cores inline do tema — não sobrescrever.
+     */
+    .ui-code-editor {
+        --ui-code-max-height: 28rem;
+        overflow: hidden;
+        border: 1px solid var(--border);
+        border-radius: 0.5rem;
+        background: #272822;
+    }
+
+    .ui-code-editor-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        border-bottom: 1px solid color-mix(in oklab, #fff 12%, transparent);
+        background: color-mix(in oklab, #000 28%, transparent);
+        padding: 0.5rem 0.75rem;
+        color: color-mix(in oklab, #fff 55%, transparent);
+        font-size: 0.75rem;
+    }
+
+    .ui-code-editor-title {
+        display: inline-flex;
+        min-width: 0;
+        align-items: center;
+        gap: 0.5rem;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 0.75rem;
+    }
+
+    .ui-code-editor-copy {
+        display: inline-flex;
+        height: 1.75rem;
+        align-items: center;
+        gap: 0.375rem;
+        border-radius: 0.375rem;
+        border: 1px solid transparent;
+        padding: 0 0.5rem;
+        color: inherit;
+        transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+    }
+
+    .ui-code-editor-copy:hover {
+        border-color: color-mix(in oklab, #fff 16%, transparent);
+        background: color-mix(in oklab, #fff 8%, transparent);
+        color: #fff;
+    }
+
+    .ui-code-editor-body {
+        max-height: var(--ui-code-max-height);
+        overflow: auto;
+    }
+
+    .ui-code-editor-body .shiki {
+        margin: 0;
+        padding: 1rem 1.125rem;
+        overflow-x: auto;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 0.8125rem;
+        line-height: 1.65;
+        text-align: left;
+        tab-size: 4;
+    }
+
+    .ui-code-editor-body .shiki code {
+        display: block;
+        font: inherit;
+        background: transparent;
+        padding: 0;
+    }
+
+    .ui-code-editor-body .shiki .line {
+        display: inline-block;
+        width: 100%;
+        min-height: 1.65em;
+    }
+
+    .ui-code-editor-body .shiki .line:empty::after {
+        content: ' ';
+    }
+
+    .ui-code-editor-loading {
+        padding: 1rem 1.125rem;
+        color: color-mix(in oklab, #fff 45%, transparent);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 0.8125rem;
+    }
+
+    /*
+     * <x-ui.sticky> — wrapper preserva altura no modo fixed (target=body);
+     * root="self" vira viewport de demo com altura via --ui-sticky-root-height.
+     */
+    .ui-sticky-root {
+        height: var(--ui-sticky-root-height, 20rem);
+        max-height: var(--ui-sticky-root-max-height, none);
+    }
+
+    .ui-sticky-wrapper {
+        position: relative;
+        width: 100%;
+    }
+
+    .ui-sticky {
+        transition:
+            box-shadow 0.2s ease,
+            background-color 0.2s ease,
+            border-color 0.2s ease;
+    }
+
+    /* Fundo opaco quando grudado — conteúdo não “vaza” por baixo da barra */
+    .ui-sticky[data-ui-sticky-initialized].active {
+        background-color: var(--card);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .ui-sticky {
+            transition: none;
+        }
+    }
+
+    /* Evita flash do conteúdo antes do Alpine inicializar (ex. abas Visualização/Código) */
+    [x-cloak] {
+        @apply hidden;
+    }
+
+    /* Indicador de tema ativo no seletor do dropdown de usuário (ver _header.blade.php) */
+    [data-theme-name] {
+        @apply ring-offset-2 ring-offset-popover;
+    }
+
+    html:not([data-theme]) [data-theme-name='default'],
+    html[data-theme='blue'] [data-theme-name='blue'],
+    html[data-theme='green'] [data-theme-name='green'],
+    html[data-theme='corporate'] [data-theme-name='corporate'],
+    html[data-theme='danger'] [data-theme-name='danger'] {
+        @apply ring-2 ring-primary;
+    }
+
+    /* Modo monocromático: dessatura a página inteira, combinável com
+       qualquer tema ativo (ver [data-monochrome-toggle] em layout.js). */
+    html.monochrome {
+        filter: grayscale(0.75);
+    }
+
+    [data-monochrome-toggle][aria-pressed='true'] {
+        @apply bg-primary/15 text-primary;
+    }
+
+    /* Scrollbar da sidebar: oculta por padrão, aparece só no hover do menu. */
+    .app-menu #scrollbar {
+        scrollbar-width: thin;
+        scrollbar-color: transparent transparent;
+    }
+
+    .app-menu:hover #scrollbar,
+    .app-menu:focus-within #scrollbar {
+        scrollbar-color: color-mix(in oklab, var(--sidebar-foreground) 28%, transparent) transparent;
+    }
+
+    .app-menu #scrollbar::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .app-menu #scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .app-menu #scrollbar::-webkit-scrollbar-thumb {
+        border-radius: 9999px;
+        background: transparent;
+    }
+
+    .app-menu:hover #scrollbar::-webkit-scrollbar-thumb,
+    .app-menu:focus-within #scrollbar::-webkit-scrollbar-thumb {
+        background: color-mix(in oklab, var(--sidebar-foreground) 28%, transparent);
+    }
+
+    .app-menu:hover #scrollbar::-webkit-scrollbar-thumb:hover,
+    .app-menu:focus-within #scrollbar::-webkit-scrollbar-thumb:hover {
+        background: color-mix(in oklab, var(--sidebar-foreground) 48%, transparent);
+    }
+
+    .sidebar-menu {
+        @apply mt-2 flex flex-col gap-1;
+    }
+
+    .sidebar-menu .nav-item {
+        @apply min-w-0;
+    }
+
+    .sidebar-menu .menu-link {
+        @apply flex min-w-0 cursor-pointer list-none items-center gap-3 rounded-md px-2 py-2
+               text-sm font-medium text-sidebar-foreground transition-colors duration-150
+               hover:bg-sidebar-active hover:text-sidebar-active-foreground;
+    }
+
+    .sidebar-menu .menu-label {
+        @apply min-w-0 flex-1 truncate;
+    }
+
+    .sidebar-menu .menu-icon {
+        @apply inline-flex size-4.5 shrink-0 items-center justify-center text-lg leading-none;
+    }
+
+    .sidebar-menu .menu-arrow {
+        @apply ml-auto inline-flex size-4 shrink-0 items-center justify-center text-xs leading-none
+               transition-transform duration-150 sidebar-collapsed:hidden;
+    }
+
+    .sidebar-menu .nav-submenu {
+        @apply hidden flex-col gap-1 pt-1 pl-7 sidebar-collapsed:hidden;
+    }
+
+    .sidebar-menu .nav-submenu .menu-link {
+        @apply py-1.5 font-normal;
+    }
+
+    .sidebar-menu .nav-submenu .menu-link:not(:has(.menu-icon))::before {
+        @apply size-1.5 shrink-0 rounded-full border border-current opacity-60 content-[''];
+    }
+
+    .sidebar-menu .nav-submenu .nav-submenu {
+        @apply pl-4;
+    }
+
+    .sidebar-menu .nav-item.active > .menu-link,
+    .sidebar-menu .nav-item.active > details > summary,
+    .sidebar-menu .nav-item:has(.nav-item.active) > details > summary {
+        @apply bg-sidebar-active text-sidebar-active-foreground;
+    }
+
+    .sidebar-menu .nav-item.active > .menu-link {
+        @apply font-semibold;
+    }
+
+    .sidebar-menu .nav-item > details[open] > .nav-submenu {
+        @apply flex;
+    }
+
+    .sidebar-menu .nav-item > details[open] > summary .menu-arrow {
+        @apply rotate-90;
+    }
+
+    .sidebar-menu .nav-submenu .nav-item.active > .menu-link::before,
+    .sidebar-menu .nav-submenu .nav-item.active > details > summary::before,
+    .sidebar-menu .nav-submenu .nav-item:has(.nav-item.active) > details > summary::before {
+        @apply border-sidebar-active-foreground bg-sidebar-active-foreground opacity-100;
+    }
+
+    @media (min-width: 64rem) {
+        body[data-app-sidebar-minimized="true"] .app-menu:not(:hover):not(:focus-within) #scrollbar {
+            padding-right: 0.625rem;
+            padding-left: 0.625rem;
+        }
+
+        body[data-app-sidebar-minimized="true"] .app-menu:not(:hover):not(:focus-within) .sidebar-menu {
+            gap: 0.375rem;
+        }
+
+        body[data-app-sidebar-minimized="true"] .app-menu:not(:hover):not(:focus-within) .sidebar-menu > .nav-item > .menu-link,
+        body[data-app-sidebar-minimized="true"] .app-menu:not(:hover):not(:focus-within) .sidebar-menu > .nav-item > details > summary {
+            width: 3.25rem;
+            height: 3.25rem;
+            margin-inline: auto;
+            justify-content: center !important;
+            gap: 0 !important;
+            padding: 0 !important;
+            border-radius: 0.75rem;
+        }
+
+        body[data-app-sidebar-minimized="true"] .app-menu:not(:hover):not(:focus-within) .sidebar-menu > .nav-item .menu-icon {
+            width: 1.375rem;
+            height: 1.375rem;
+            font-size: 1.375rem;
+        }
+
+        body[data-app-sidebar-minimized="true"] .app-menu:not(:hover):not(:focus-within) .sidebar-menu > .nav-item.active > .menu-link,
+        body[data-app-sidebar-minimized="true"] .app-menu:not(:hover):not(:focus-within) .sidebar-menu > .nav-item.active > details > summary,
+        body[data-app-sidebar-minimized="true"] .app-menu:not(:hover):not(:focus-within) .sidebar-menu > .nav-item:has(.nav-item.active) > details > summary {
+            box-shadow:
+                inset 0 0 0 1px color-mix(in srgb, var(--sidebar-active-foreground) 18%, transparent),
+                0 4px 12px rgb(15 23 42 / 10%);
+        }
+
+        body[data-app-sidebar-minimized="true"] .app-menu:not(:hover):not(:focus-within) .sidebar-menu > .nav-item.active .menu-icon,
+        body[data-app-sidebar-minimized="true"] .app-menu:not(:hover):not(:focus-within) .sidebar-menu > .nav-item:has(.nav-item.active) > details > summary .menu-icon {
+            transform: scale(1.08);
+        }
+
+        body[data-app-sidebar-minimized="true"] .app-menu:is(:hover, :focus-within) {
+            width: 16rem !important;
+            box-shadow: 4px 0 16px rgb(15 23 42 / 12%);
+        }
+
+        body[data-app-sidebar-minimized="true"] .app-menu:is(:hover, :focus-within) [data-sidebar-brand-logo] {
+            display: flex !important;
+        }
+
+        body[data-app-sidebar-minimized="true"] .app-menu:is(:hover, :focus-within) [data-sidebar-section-label],
+        body[data-app-sidebar-minimized="true"] .app-menu:is(:hover, :focus-within) .menu-label,
+        body[data-app-sidebar-minimized="true"] .app-menu:is(:hover, :focus-within) .menu-arrow {
+            display: block !important;
+        }
+
+        body[data-app-sidebar-minimized="true"] .app-menu:is(:hover, :focus-within) [data-sidebar-brand-mark] {
+            display: none !important;
+        }
+
+        body[data-app-sidebar-minimized="true"] .app-menu:is(:hover, :focus-within) .nav-item > details[open] > .nav-submenu {
+            display: flex !important;
+        }
+
+        body[data-app-sidebar-minimized="true"] .app-menu:not(:hover):not(:focus-within) .sidebar-menu .nav-submenu {
+            display: none !important;
+        }
+    }
+}
+
+/* Remove o marcador padrão do <summary> (usado nos grupos colapsáveis da sidebar
+   e no dropdown de usuário — <details>/<summary> nativo, sem JS adicional). */
+summary.menu-link,
+summary.dropdown-trigger {
+    list-style: none;
+}
+
+summary.menu-link::-webkit-details-marker,
+summary.dropdown-trigger::-webkit-details-marker {
+    display: none;
+}
+
+/* Fecha os dropdowns abertos ao clicar fora (ver data-dropdown em layout.js) */
+details.dropdown[open] > summary::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+}
+
+/* <x-ui.map> — pin customizado + z-index do Leaflet dentro de cards/docs */
+.ui-map .leaflet-container {
+    font: inherit;
+    background: transparent;
+    z-index: 0;
+}
+
+.ui-map .leaflet-control-attribution {
+    font-size: 10px;
+    background: color-mix(in oklab, var(--background) 85%, transparent);
+    color: var(--muted-foreground);
+}
+
+.ui-map .leaflet-control-attribution a {
+    color: var(--primary);
+}
+
+.ui-map .leaflet-bar a {
+    background: var(--card);
+    color: var(--foreground);
+    border-bottom-color: var(--border);
+}
+
+.ui-map .leaflet-bar a:hover {
+    background: var(--muted);
+    color: var(--foreground);
+}
+
+.ui-map .leaflet-control-layers {
+    background: var(--card);
+    color: var(--foreground);
+    border-color: var(--border);
+}
+
+.ui-map-div-icon {
+    background: transparent;
+    border: 0;
+}
+
+.ui-map-marker-pin {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 9999px;
+    background: var(--ui-map-pin, var(--danger));
+    color: #fff;
+    box-shadow: 0 2px 8px rgb(0 0 0 / 0.25);
+    font-size: 0.85rem;
+    line-height: 1;
+}
+
+.ui-map-vector-overlay {
+    pointer-events: none;
+}
