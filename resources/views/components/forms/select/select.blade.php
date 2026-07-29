@@ -402,7 +402,7 @@
                     @if ($hasError) aria-invalid="true" @endif
                     @disabled($isDisabled || $isReadonly)
                     @if ($required) required @endif
-                    {{ $selectAttributes->class([$nativeSelectClasses]) }}
+                    {{ $attributes->except(['class', 'disabled', 'readonly'])->class([$nativeSelectClasses]) }}
                 >
                     @unless ($multiple)
                         <option value="" @selected($initialValue === '' || $initialValue === null)>{{ $placeholder }}</option>

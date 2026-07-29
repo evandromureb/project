@@ -15,19 +15,19 @@ return [
         ],
         [
             'type' => 'separator',
-            'text' => 'Menu',
+            'text' => 'Configurações do sistema',
         ],
         [
             'type'  => 'drop',
-            'icon'  => 'bi-palette',
-            'label' => 'Fundamentos',
+            'icon'  => 'bi-wrench',
+            'label' => 'Settings',
             'items' => [
                 [
                     'type'        => 'drop-item',
-                    'label'       => 'Cores',
-                    'route'       => 'app1',
-                    'title'       => 'Cores',
-                    'description' => 'Tokens de cor do tema: brand, status, superfícies e sidebar.',
+                    'route'       => 'settings.sidebar',
+					'label'       => 'Editar menu',
+					'title'       => 'Editar menu do sistema',
+					'description' => 'Edite o menu do sistema para adicionar, remover ou reordenar itens.',
                 ],
                 [
                     'type'        => 'drop-item',
