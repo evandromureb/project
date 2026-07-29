@@ -28,6 +28,8 @@ return new class extends Component
 
     public bool $isEditing = false;
 
+    public bool $isCreatingDropItem = false;
+
     public string $formKey = '';
 
     public string $formLabel = '';
@@ -227,6 +229,7 @@ return new class extends Component
 
         $this->isCreating = false;
         $this->isEditing = true;
+        $this->isCreatingDropItem = false;
         $this->fillForm($menu);
         $this->statusMessage = '';
         $this->resetErrorBag();
@@ -238,6 +241,7 @@ return new class extends Component
         $this->clearForm();
         $this->isCreating = true;
         $this->isEditing = false;
+        $this->isCreatingDropItem = false;
         $this->formType = '';
         $this->statusMessage = '';
         $this->resetErrorBag();
@@ -257,6 +261,7 @@ return new class extends Component
         $this->clearForm();
         $this->isCreating = true;
         $this->isEditing = false;
+        $this->isCreatingDropItem = true;
         $this->formType = MenuType::DROP_ITEM->value;
         $this->formParentId = $parentId;
         $this->syncFormKey();
@@ -505,6 +510,7 @@ return new class extends Component
         $this->selectedType = null;
         $this->isCreating = false;
         $this->isEditing = false;
+        $this->isCreatingDropItem = false;
         $this->formKey = '';
         $this->formLabel = '';
         $this->formIcon = '';
@@ -520,29 +526,37 @@ return new class extends Component
 };
 ?>
 
-<div class="flex flex-col gap-6 text-foreground">
+<div class="flex w-full min-w-0 flex-col gap-6 text-foreground">
     @if (filled($statusMessage))
         <x-ui.alert :color="$statusTone" variant="soft" dismissible>
             {{ $statusMessage }}
         </x-ui.alert>
     @endif
 
-    <div @class(['grid gap-6', 'lg:grid-cols-2' => $this->showForm])>
-        <x-ui.card title="Estrutura do menu" subtitle="Arraste para reordenar. Use os botões de cada item para editar, excluir ou criar filhos.">
+    <div @class([
+        'grid w-full min-w-0 gap-6',
+        'lg:grid-cols-2' => $this->showForm,
+        'mx-auto max-w-3xl' => ! $this->showForm,
+    ])>
+        <x-ui.card
+            class="min-w-0 overflow-hidden"
+            title="Estrutura do menu"
+            subtitle="Arraste para reordenar. Use os botões de cada item."
+        >
             <div class="mb-4 flex flex-wrap items-center gap-2">
                 <x-ui.button type="button" size="sm" wire:click="startCreate" icon="bi-plus-lg">
                     Novo
                 </x-ui.button>
             </div>
 
-            <div wire:key="menu-tree-{{ $treeVersion }}" class="rounded-md border border-border bg-background p-2">
+            <div wire:key="menu-tree-{{ $treeVersion }}" class="min-w-0 overflow-x-auto rounded-md border border-border bg-background p-2">
                 <x-ui.treeview
                     draggable
                     actions
                     variant="flush"
                     :expanded="$this->expandedKeys"
                     aria-label="Menus do sidebar"
-                    class="bg-transparent"
+                    class="min-w-0 bg-transparent"
                     @treeview-reorder="$wire.reorder($event.detail.tree)"
                 >
                     @foreach ($this->menus as $menu)
@@ -554,20 +568,23 @@ return new class extends Component
 
         @if ($this->showForm)
             <x-ui.card
-                title="{{ $isCreating ? 'Novo item' : 'Editar item' }}"
-                :subtitle="$isCreating ? 'Selecione o tipo para continuar.' : 'Altere os campos e salve.'"
+                class="min-w-0 overflow-hidden"
+                title="{{ $isCreatingDropItem ? 'Novo drop-item' : ($isCreating ? 'Novo item' : 'Editar item') }}"
+                :subtitle="$isCreatingDropItem ? 'Preencha os dados do drop-item.' : ($isCreating ? 'Selecione o tipo para continuar.' : 'Altere os campos e salve.')"
             >
                 <form wire:submit.prevent="save" class="flex flex-col gap-4">
-                    <x-forms.select
-                        label="Tipo"
-                        native
-                        :options="$this->typeOptions"
-                        wire:model.live="formType"
-                        name="formType"
-                        :value="$formType"
-                        placeholder="Selecione o tipo"
-                        :error="$errors->first('formType')"
-                    />
+                    @unless ($isCreatingDropItem)
+                        <x-forms.select
+                            label="Tipo"
+                            native
+                            :options="$this->typeOptions"
+                            wire:model.live="formType"
+                            name="formType"
+                            :value="$formType"
+                            placeholder="Selecione o tipo"
+                            :error="$errors->first('formType')"
+                        />
+                    @endunless
 
                     @if ($this->formReady)
                         @if ($this->isSeparator)
@@ -598,7 +615,7 @@ return new class extends Component
                                 />
                             @endif
 
-                            @if ($this->isDropItem)
+                            @if ($this->isDropItem && ! $isCreatingDropItem)
                                 <x-forms.select
                                     label="Drop"
                                     native

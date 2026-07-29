@@ -150,7 +150,7 @@
         x-bind:class="(isSelected(@js($name)) ? '{{ $selectedClasses }}' : '') + (isDropInside(@js($name)) ? ' {{ $dropInsideClasses }}' : '')"
         {{
             $attributes->class([
-                'ui-treeview-item group relative flex w-full min-w-0 items-center rounded-md outline-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary',
+                'ui-treeview-item group relative flex w-full min-w-0 flex-wrap items-center rounded-md outline-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary',
                 $paddingClasses,
                 'cursor-not-allowed opacity-50' => $disabled,
                 'hover:bg-muted' => ! $disabled,
@@ -282,7 +282,7 @@
         @endif
 
         @if ($hasEndSlot)
-            <span class="flex shrink-0 items-center gap-1.5">
+            <span class="ms-auto flex min-w-0 max-w-full flex-wrap items-center justify-end gap-1">
                 {{ $end }}
             </span>
         @endif

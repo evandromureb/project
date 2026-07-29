@@ -25,21 +25,17 @@
     :icon="$icon"
 >
     <x-slot:end>
-        <span class="flex min-w-0 flex-wrap items-center gap-1">
-            <x-ui.badge size="sm" pill variant="soft" color="secondary">
-                {{ $menu->type->value }}
-            </x-ui.badge>
+        <span class="text-xs text-muted-foreground">({{ $menu->type->value }})</span>
 
-            <x-ui.badge size="sm" pill variant="soft" :color="$menu->visible ? 'success' : 'danger'">
-                {{ $menu->visible ? 'visível' : 'não visível' }}
-            </x-ui.badge>
+        <x-ui.badge size="sm" pill variant="soft" :color="$menu->visible ? 'success' : 'danger'">
+            {{ $menu->visible ? 'visível' : 'oculto' }}
+        </x-ui.badge>
 
-            <x-ui.badge size="sm" pill variant="soft" :color="$menu->enabled ? 'success' : 'danger'">
-                {{ $menu->enabled ? 'ativo' : 'inativo' }}
-            </x-ui.badge>
-        </span>
+        <x-ui.badge size="sm" pill variant="soft" :color="$menu->enabled ? 'success' : 'danger'">
+            {{ $menu->enabled ? 'ativo' : 'inativo' }}
+        </x-ui.badge>
 
-        <span class="ms-1 flex shrink-0 items-center gap-0.5 opacity-100 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
+        <span class="flex shrink-0 items-center gap-0.5">
             @if ($isDrop)
                 <button
                     type="button"
