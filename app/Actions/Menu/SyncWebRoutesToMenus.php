@@ -17,7 +17,7 @@ class SyncWebRoutesToMenus
      */
     public function handle(string $group = 'sidebar'): array
     {
-        $created = [];
+        $created        = [];
         $existingRoutes = Menu::query()
             ->whereNotNull('route')
             ->pluck('route')
@@ -31,20 +31,20 @@ class SyncWebRoutesToMenus
             $key = $this->uniqueKey($name);
 
             Menu::query()->create([
-                'group' => $group,
-                'parent_id' => null,
-                'sort' => (int) Menu::query()->forGroup($group)->roots()->max('sort') + 1,
-                'type' => MenuType::HIDDEN,
-                'key' => $key,
-                'label' => $name,
-                'route' => $name,
-                'title' => $name,
+                'group'       => $group,
+                'parent_id'   => null,
+                'sort'        => (int) Menu::query()->forGroup($group)->roots()->max('sort') + 1,
+                'type'        => MenuType::HIDDEN,
+                'key'         => $key,
+                'label'       => $name,
+                'route'       => $name,
+                'title'       => $name,
                 'description' => "Rota sincronizada de web.php: {$name}",
-                'visible' => false,
-                'enabled' => true,
+                'visible'     => false,
+                'enabled'     => true,
             ]);
 
-            $created[] = $key;
+            $created[]        = $key;
             $existingRoutes[] = $name;
         }
 
@@ -61,42 +61,41 @@ class SyncWebRoutesToMenus
     {
         $excludedNamePrefixes = ['livewire.', 'default-livewire.', 'boost.', 'storage.'];
 
-        return collect(Route::getRoutes())
-            ->filter(function (RoutingRoute $route) use ($excludedNamePrefixes): bool {
-                $name = $route->getName();
+        return array_values(collect(Route::getRoutes()->getRoutes())
+            ->filter(function (RoutingRoute $routingRoute) use ($excludedNamePrefixes): bool {
+                $name = $routingRoute->getName();
 
-                if (! is_string($name) || $name === '') {
+                if (!is_string($name) || $name === '') {
                     return false;
                 }
 
-                if (! in_array('web', $route->middleware(), true)) {
+                if (!in_array('web', $routingRoute->middleware(), true)) {
                     return false;
                 }
 
-                foreach ($excludedNamePrefixes as $prefix) {
-                    if (str_starts_with($name, $prefix)) {
+                foreach ($excludedNamePrefixes as $excludedNamePrefix) {
+                    if (str_starts_with($name, $excludedNamePrefix)) {
                         return false;
                     }
                 }
 
                 return true;
             })
-            ->map(fn (RoutingRoute $route): string => (string) $route->getName())
+            ->map(fn (RoutingRoute $routingRoute): string => (string) $routingRoute->getName())
             ->unique()
-            ->values()
-            ->all();
+            ->all());
     }
 
     private function uniqueKey(string $routeName): string
     {
         $key = $routeName;
 
-        if (! Menu::query()->where('key', $key)->exists()) {
+        if (!Menu::query()->where('key', $key)->exists()) {
             return $key;
         }
 
-        $base = 'route-'.Str::slug(str_replace('.', '-', $routeName));
-        $key = $base;
+        $base   = 'route-' . Str::slug(str_replace('.', '-', $routeName));
+        $key    = $base;
         $suffix = 1;
 
         while (Menu::query()->where('key', $key)->exists()) {

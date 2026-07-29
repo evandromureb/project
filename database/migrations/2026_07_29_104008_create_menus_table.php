@@ -4,34 +4,33 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      */
     public function up(): void
     {
-        Schema::create('menus', function (Blueprint $table) {
-            $table->id();
-            $table->string('group')->index();
-            $table->foreignId('parent_id')->nullable()->constrained('menus')->nullOnDelete();
-            $table->unsignedInteger('sort')->default(0);
-            $table->string('type');
-            $table->string('key')->unique();
-            $table->string('label')->nullable();
-            $table->string('icon')->nullable();
-            $table->string('route')->nullable();
-            $table->string('url')->nullable();
-            $table->string('permission')->nullable();
-            $table->string('guard')->nullable();
-            $table->string('title')->nullable();
-            $table->text('description')->nullable();
-            $table->boolean('visible')->default(true);
-            $table->boolean('enabled')->default(true);
-            $table->json('meta')->nullable();
-            $table->timestamps();
+        Schema::create('menus', function (Blueprint $blueprint): void {
+            $blueprint->id();
+            $blueprint->string('group')->index();
+            $blueprint->foreignId('parent_id')->nullable()->constrained('menus')->nullOnDelete();
+            $blueprint->unsignedInteger('sort')->default(0);
+            $blueprint->string('type');
+            $blueprint->string('key')->unique();
+            $blueprint->string('label')->nullable();
+            $blueprint->string('icon')->nullable();
+            $blueprint->string('route')->nullable();
+            $blueprint->string('url')->nullable();
+            $blueprint->string('permission')->nullable();
+            $blueprint->string('guard')->nullable();
+            $blueprint->string('title')->nullable();
+            $blueprint->text('description')->nullable();
+            $blueprint->boolean('visible')->default(true);
+            $blueprint->boolean('enabled')->default(true);
+            $blueprint->json('meta')->nullable();
+            $blueprint->timestamps();
 
-            $table->index(['group', 'parent_id', 'sort']);
+            $blueprint->index(['group', 'parent_id', 'sort']);
         });
     }
 

@@ -22,7 +22,7 @@ return new #[Layout('layouts::auth', [
 
 	public function mount(?string $token = null): void
 	{
-		$this->token = (string) ($token ?? '');
+		$this->token = $token ?? '';
 		$this->email = (string) request()->query('email', '');
 	}
 

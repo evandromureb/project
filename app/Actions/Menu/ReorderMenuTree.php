@@ -10,10 +10,12 @@ use Illuminate\Validation\ValidationException;
 
 class ReorderMenuTree
 {
-    public function __construct(private MenuTree $menuTree) {}
+    public function __construct(private MenuTree $menuTree)
+    {
+    }
 
     /**
-     * @param  list<array{name?: string|null, children?: list<mixed>}>  $tree
+     * @param list<array{name?: string|null, children?: list<mixed>}> $tree
      */
     public function handle(string $group, array $tree): void
     {
@@ -55,6 +57,13 @@ class ReorderMenuTree
         DB::transaction(function () use ($rows, $menus): void {
             foreach ($rows as $row) {
                 $menu = $menus->get($row['key']);
+
+                if ($menu === null) {
+                    throw ValidationException::withMessages([
+                        'tree' => "Item desconhecido: {$row['key']}.",
+                    ]);
+                }
+
                 $parentId = null;
 
                 if ($row['parent_key'] !== null) {
@@ -78,7 +87,7 @@ class ReorderMenuTree
 
                 $menu->forceFill([
                     'parent_id' => $parentId,
-                    'sort' => $row['sort'],
+                    'sort'      => $row['sort'],
                 ])->save();
             }
         });

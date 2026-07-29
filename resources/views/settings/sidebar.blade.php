@@ -88,11 +88,11 @@ return new class extends Component
     #[Computed]
     public function expandedKeys(): array
     {
-        return Menu::query()
+        return array_values(Menu::query()
             ->forGroup($this->group)
             ->where('type', MenuType::DROP)
             ->pluck('key')
-            ->all();
+            ->all());
     }
 
     /**
@@ -103,15 +103,14 @@ return new class extends Component
     {
         $hasDrops = $this->dropOptions !== [];
 
-        return collect(MenuType::cases())
-            ->reject(fn (MenuType $type): bool => ($type === MenuType::HIDDEN && $this->formType !== MenuType::HIDDEN->value)
-                || ($type === MenuType::DROP_ITEM && ! $hasDrops))
-            ->map(fn (MenuType $type): array => [
-                'value' => $type->value,
-                'label' => $type->label(),
+        return array_values(collect(MenuType::cases())
+            ->reject(fn (MenuType $menuType): bool => ($menuType === MenuType::HIDDEN && $this->formType !== MenuType::HIDDEN->value)
+                || ($menuType === MenuType::DROP_ITEM && ! $hasDrops))
+            ->map(fn (MenuType $menuType): array => [
+                'value' => $menuType->value,
+                'label' => $menuType->label(),
             ])
-            ->values()
-            ->all();
+            ->all());
     }
 
     /**
@@ -120,7 +119,7 @@ return new class extends Component
     #[Computed]
     public function dropOptions(): array
     {
-        return Menu::query()
+        return array_values(Menu::query()
             ->forGroup($this->group)
             ->where('type', MenuType::DROP)
             ->orderBy('sort')
@@ -129,8 +128,7 @@ return new class extends Component
                 'value' => (string) $menu->id,
                 'label' => (string) ($menu->label ?? $menu->key),
             ])
-            ->values()
-            ->all();
+            ->all());
     }
 
     /**
@@ -139,7 +137,7 @@ return new class extends Component
     #[Computed]
     public function dropParentOptions(): array
     {
-        return Menu::query()
+        return array_values(Menu::query()
             ->forGroup($this->group)
             ->where('type', MenuType::DROP)
             ->whereNull('parent_id')
@@ -153,8 +151,7 @@ return new class extends Component
                 'value' => (string) $menu->id,
                 'label' => (string) ($menu->label ?? $menu->key),
             ])
-            ->values()
-            ->all();
+            ->all());
     }
 
     /**
@@ -173,16 +170,15 @@ return new class extends Component
             ->pluck('route')
             ->all();
 
-        $routes = app(SyncWebRoutesToMenus::class)->webNamedRoutes();
+        $routes = resolve(SyncWebRoutesToMenus::class)->webNamedRoutes();
 
-        return collect($routes)
+        return array_values(collect($routes)
             ->reject(fn (string $name): bool => in_array($name, $usedRoutes, true))
             ->map(fn (string $name): array => [
                 'value' => $name,
                 'label' => $name,
             ])
-            ->values()
-            ->all();
+            ->all());
     }
 
     public function getAllowsIconProperty(): bool
@@ -362,7 +358,7 @@ return new class extends Component
     public function reorder(array $tree): void
     {
         try {
-            app(ReorderMenuTree::class)->handle($this->group, $tree);
+            resolve(ReorderMenuTree::class)->handle($this->group, $tree);
             $this->statusMessage = 'Ordem salva.';
             $this->statusTone = 'success';
         } catch (ValidationException $exception) {
@@ -522,9 +518,9 @@ return new class extends Component
         $this->statusTone = 'success';
     }
 
-    public function syncRoutes(SyncWebRoutesToMenus $sync): void
+    public function syncRoutes(SyncWebRoutesToMenus $syncWebRoutesToMenus): void
     {
-        $created = $sync->handle($this->group);
+        $created = $syncWebRoutesToMenus->handle($this->group);
         $this->treeVersion++;
         unset($this->menus, $this->hiddenMenus, $this->expandedKeys, $this->routeOptions, $this->dropOptions, $this->dropParentOptions, $this->typeOptions);
         $this->statusMessage = $created === []

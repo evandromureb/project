@@ -68,7 +68,7 @@ class extends Component {
 	{
 		$validated = $this->validate();
 
-		$user = User::create([
+		$user = User::query()->create([
 			'name' => $validated['name'],
 			'email' => $validated['email'],
 			'password' => $validated['password'],

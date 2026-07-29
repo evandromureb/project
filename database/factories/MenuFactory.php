@@ -19,69 +19,69 @@ class MenuFactory extends Factory
     public function definition(): array
     {
         return [
-            'group' => 'sidebar',
-            'parent_id' => null,
-            'sort' => 0,
-            'type' => MenuType::ITEM,
-            'key' => fake()->unique()->slug(3),
-            'label' => fake()->words(2, true),
-            'icon' => null,
-            'route' => null,
-            'url' => null,
-            'permission' => null,
-            'guard' => null,
-            'title' => null,
+            'group'       => 'sidebar',
+            'parent_id'   => null,
+            'sort'        => 0,
+            'type'        => MenuType::ITEM,
+            'key'         => fake()->unique()->slug(3),
+            'label'       => fake()->words(2, true),
+            'icon'        => null,
+            'route'       => null,
+            'url'         => null,
+            'permission'  => null,
+            'guard'       => null,
+            'title'       => null,
             'description' => null,
-            'visible' => true,
-            'enabled' => true,
-            'meta' => null,
+            'visible'     => true,
+            'enabled'     => true,
+            'meta'        => null,
         ];
     }
 
     public function drop(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn (array $attributes): array => [
             'type' => MenuType::DROP,
         ]);
     }
 
     public function dropItem(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn (array $attributes): array => [
             'type' => MenuType::DROP_ITEM,
         ]);
     }
 
     public function separator(): static
     {
-        return $this->state(fn (array $attributes) => [
-            'type' => MenuType::SEPARATOR,
+        return $this->state(fn (array $attributes): array => [
+            'type'  => MenuType::SEPARATOR,
             'label' => fake()->word(),
             'route' => null,
-            'url' => null,
+            'url'   => null,
         ]);
     }
 
     public function hidden(): static
     {
-        return $this->state(fn (array $attributes) => [
-            'type' => MenuType::HIDDEN,
+        return $this->state(fn (array $attributes): array => [
+            'type'    => MenuType::HIDDEN,
             'visible' => false,
         ]);
     }
 
     public function root(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn (array $attributes): array => [
             'parent_id' => null,
         ]);
     }
 
-    public function childOf(Menu $parent): static
+    public function childOf(Menu $menu): static
     {
-        return $this->state(fn (array $attributes) => [
-            'parent_id' => $parent->id,
-            'group' => $parent->group,
+        return $this->state(fn (array $attributes): array => [
+            'parent_id' => $menu->id,
+            'group'     => $menu->group,
         ]);
     }
 }

@@ -4,67 +4,66 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      */
     public function up(): void
     {
-        Schema::create('users', function (Blueprint $table): void {
-            $table->id();
-            $table->uuid('uuid')->unique();
+        Schema::create('users', function (Blueprint $blueprint): void {
+            $blueprint->id();
+            $blueprint->uuid('uuid')->unique();
 
-            $table->string('name');
-            $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
+            $blueprint->string('name');
+            $blueprint->string('email')->unique();
+            $blueprint->timestamp('email_verified_at')->nullable();
 
-            $table->rememberToken();
+            $blueprint->rememberToken();
 
-            $table->enum('status', ['pending', 'active', 'suspended', 'banned'])
+            $blueprint->enum('status', ['pending', 'active', 'suspended', 'banned'])
                 ->default('active');
 
-            $table->timestamp('banned_at')->nullable();
-            $table->string('banned_reason')->nullable();
+            $blueprint->timestamp('banned_at')->nullable();
+            $blueprint->string('banned_reason')->nullable();
 
-            $table->string('password');
+            $blueprint->string('password');
 
-            $table->boolean('two_factor_enabled')->default(false);
-            $table->string('otp_code')->nullable();
-            $table->timestamp('otp_created_at')->nullable();
+            $blueprint->boolean('two_factor_enabled')->default(false);
+            $blueprint->string('otp_code')->nullable();
+            $blueprint->timestamp('otp_created_at')->nullable();
 
-            $table->timestamp('last_login_at')->nullable();
-            $table->ipAddress('last_login_ip')->nullable();
-            $table->timestamp('last_activity_at')->nullable();
+            $blueprint->timestamp('last_login_at')->nullable();
+            $blueprint->ipAddress('last_login_ip')->nullable();
+            $blueprint->timestamp('last_activity_at')->nullable();
 
-            $table->json('preferences')->nullable();
+            $blueprint->json('preferences')->nullable();
 
-            $table->string('photo')->nullable();
+            $blueprint->string('photo')->nullable();
 
-            $table->string('locale', 5)->default('pt_BR');
-            $table->string('timezone')->default('America/Sao_Paulo');
+            $blueprint->string('locale', 5)->default('pt_BR');
+            $blueprint->string('timezone')->default('America/Sao_Paulo');
 
-            $table->timestamp('password_changed_at')->nullable();
-            $table->boolean('force_password_change')->default(false);
-            $table->timestamps();
-            $table->softDeletes();
+            $blueprint->timestamp('password_changed_at')->nullable();
+            $blueprint->boolean('force_password_change')->default(false);
+            $blueprint->timestamps();
+            $blueprint->softDeletes();
 
-            $table->index(['status', 'deleted_at']);
+            $blueprint->index(['status', 'deleted_at']);
         });
 
-        Schema::create('password_reset_tokens', function (Blueprint $table) {
-            $table->string('email')->primary();
-            $table->string('token');
-            $table->timestamp('created_at')->nullable();
+        Schema::create('password_reset_tokens', function (Blueprint $blueprint): void {
+            $blueprint->string('email')->primary();
+            $blueprint->string('token');
+            $blueprint->timestamp('created_at')->nullable();
         });
 
-        Schema::create('sessions', function (Blueprint $table) {
-            $table->string('id')->primary();
-            $table->foreignId('user_id')->nullable()->index();
-            $table->string('ip_address', 45)->nullable();
-            $table->text('user_agent')->nullable();
-            $table->longText('payload');
-            $table->integer('last_activity')->index();
+        Schema::create('sessions', function (Blueprint $blueprint): void {
+            $blueprint->string('id')->primary();
+            $blueprint->foreignId('user_id')->nullable()->index();
+            $blueprint->string('ip_address', 45)->nullable();
+            $blueprint->text('user_agent')->nullable();
+            $blueprint->longText('payload');
+            $blueprint->integer('last_activity')->index();
         });
     }
 

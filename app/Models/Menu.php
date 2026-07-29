@@ -5,34 +5,31 @@ namespace App\Models;
 use App\Enums\MenuType;
 use Database\Factories\MenuFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\{Builder, Collection, Model};
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\{BelongsTo, HasMany};
 use Illuminate\Support\Carbon;
 
 /**
- * @property int $id
- * @property string $group
- * @property int|null $parent_id
- * @property int $sort
- * @property MenuType $type
- * @property string $key
- * @property string|null $label
- * @property string|null $icon
- * @property string|null $route
- * @property string|null $url
- * @property string|null $permission
- * @property string|null $guard
- * @property string|null $title
- * @property string|null $description
- * @property bool $visible
- * @property bool $enabled
+ * @property int                       $id
+ * @property string                    $group
+ * @property int|null                  $parent_id
+ * @property int                       $sort
+ * @property MenuType                  $type
+ * @property string                    $key
+ * @property string|null               $label
+ * @property string|null               $icon
+ * @property string|null               $route
+ * @property string|null               $url
+ * @property string|null               $permission
+ * @property string|null               $guard
+ * @property string|null               $title
+ * @property string|null               $description
+ * @property bool                      $visible
+ * @property bool                      $enabled
  * @property array<string, mixed>|null $meta
- * @property Carbon|null $created_at
- * @property Carbon|null $updated_at
+ * @property Carbon|null               $created_at
+ * @property Carbon|null               $updated_at
  * @property-read Menu|null $parent
  * @property-read Collection<int, Menu> $children
  */
@@ -63,31 +60,17 @@ class Menu extends Model
      * @var array<string, mixed>
      */
     protected $attributes = [
-        'sort' => 0,
+        'sort'    => 0,
         'visible' => true,
         'enabled' => true,
     ];
-
-    /**
-     * @return array<string, string>
-     */
-    protected function casts(): array
-    {
-        return [
-            'type' => MenuType::class,
-            'sort' => 'integer',
-            'visible' => 'boolean',
-            'enabled' => 'boolean',
-            'meta' => 'array',
-        ];
-    }
 
     /**
      * @return BelongsTo<Menu, $this>
      */
     public function parent(): BelongsTo
     {
-        return $this->belongsTo(Menu::class);
+        return $this->belongsTo(self::class);
     }
 
     /**
@@ -95,25 +78,7 @@ class Menu extends Model
      */
     public function children(): HasMany
     {
-        return $this->hasMany(Menu::class, 'parent_id')->orderBy('sort');
-    }
-
-    /**
-     * @param  Builder<Menu>  $query
-     * @return Builder<Menu>
-     */
-    public function scopeForGroup(Builder $query, string $group): Builder
-    {
-        return $query->where('group', $group);
-    }
-
-    /**
-     * @param  Builder<Menu>  $query
-     * @return Builder<Menu>
-     */
-    public function scopeRoots(Builder $query): Builder
-    {
-        return $query->whereNull('parent_id');
+        return $this->hasMany(self::class, 'parent_id')->orderBy('sort');
     }
 
     /**
@@ -125,7 +90,7 @@ class Menu extends Model
             ->map(fn (int $level): string => implode('.', array_fill(0, $level, 'children')))
             ->all();
 
-        return static::query()
+        return self::query()
             ->forGroup($group)
             ->roots()
             ->orderBy('sort')
@@ -139,23 +104,55 @@ class Menu extends Model
     public function toTreeNode(): array
     {
         return [
-            'name' => $this->key,
-            'children' => $this->children
-                ->map(fn (Menu $child): array => $child->toTreeNode())
-                ->values()
-                ->all(),
+            'name'     => $this->key,
+            'children' => array_values($this->children
+                ->map(fn (Menu $menu): array => $menu->toTreeNode())
+                ->all()),
         ];
     }
 
     /**
-     * @param  Collection<int, Menu>  $menus
+     * @param  Collection<int, Menu>                            $menus
      * @return list<array{name: string, children: list<mixed>}>
      */
     public static function collectionToTree(Collection $menus): array
     {
-        return $menus
+        return array_values($menus
             ->map(fn (Menu $menu): array => $menu->toTreeNode())
-            ->values()
-            ->all();
+            ->all());
+    }
+
+    /**
+     * @param  Builder<Menu> $builder
+     * @return Builder<Menu>
+     */
+    #[\Illuminate\Database\Eloquent\Attributes\Scope]
+    protected function forGroup(Builder $builder, string $group): Builder
+    {
+        return $builder->where('group', $group);
+    }
+
+    /**
+     * @param  Builder<Menu> $builder
+     * @return Builder<Menu>
+     */
+    #[\Illuminate\Database\Eloquent\Attributes\Scope]
+    protected function roots(Builder $builder): Builder
+    {
+        return $builder->whereNull('parent_id');
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'type'    => MenuType::class,
+            'sort'    => 'integer',
+            'visible' => 'boolean',
+            'enabled' => 'boolean',
+            'meta'    => 'array',
+        ];
     }
 }

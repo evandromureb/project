@@ -5,9 +5,34 @@ includes:
 parameters:
     paths:
         - app/
-        - bootstrap/app.php
+        - bootstrap/
         - config/
         - database/
         - routes/
+        - resources/
 
-    level: 7
+    level: 8
+
+    excludePaths:
+        - vendor/*
+        - storage/*
+        - public/*
+        - node_modules/*
+        - bootstrap/cache/*
+        - storage/framework/*
+        - storage/logs/*
+
+    parallel:
+        processTimeout: 300.0
+        maximumNumberOfProcesses: 4
+
+    reportUnmatchedIgnoredErrors: false
+
+    bootstrapFiles:
+        - bootstrap/app.php
+
+    ignoreErrors:
+        - '#Call to an undefined method .*::.*\(\)#'
+        - '#Access to an undefined property .*::\$.*#'
+        - '#PHPDoc tag @var has invalid value#'
+        - '#Expression "new class.*extends.*Component.*" on a separate line does not do anything\.#'

@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::livewire('/', 'dashboard')->name('dashboard');
 
     Route::livewire('/app', 'dashboard')->name('app');
@@ -15,4 +15,5 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::livewire('/settings/sidebar', 'settings::sidebar')->name('settings.sidebar');
 });
-require __DIR__.'/auth.php';
+
+require __DIR__ . '/auth.php';

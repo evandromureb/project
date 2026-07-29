@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Database\Seeders;
 
 use App\Models\User;
@@ -15,7 +17,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-		$this->call([AdminUserSeeder::class]);
+        $this->call([AdminUserSeeder::class]);
         User::factory(99)->create();
 
         $this->call(MenuSeeder::class);

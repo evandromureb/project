@@ -29,7 +29,11 @@ return new #[Layout('layouts::auth')] class extends Component
 			return $this->secondsRemaining;
 		}
 
-		Auth::user()->sendEmailVerificationNotification();
+		$user = Auth::user();
+
+		abort_if($user === null, 403);
+
+		$user->sendEmailVerificationNotification();
 
 		RateLimiter::hit($this->throttleKey(), 60);
 

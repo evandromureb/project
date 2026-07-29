@@ -4,7 +4,7 @@ use App\Enums\MenuType;
 use App\Models\Menu;
 use Illuminate\Support\Facades\Cache;
 
-if (! function_exists('getSidebarItemByRoute')) {
+if (!function_exists('getSidebarItemByRoute')) {
     /**
      * Retorna o item do sidebar correspondente à rota informada.
      *
@@ -13,7 +13,7 @@ if (! function_exists('getSidebarItemByRoute')) {
     function getSidebarItemByRoute(string $currentRoute): ?array
     {
         $sidebarConfig = Cache::get('sidebarMenu', config('dashboard.sidebar'));
-        $authConfig = config('dashboard.auth');
+        $authConfig    = config('dashboard.auth');
 
         if ($sidebarConfig) {
             $found = searchInSidebarItems($sidebarConfig, $currentRoute);
@@ -35,11 +35,11 @@ if (! function_exists('getSidebarItemByRoute')) {
     }
 }
 
-if (! function_exists('searchInSidebarItems')) {
+if (!function_exists('searchInSidebarItems')) {
     /**
      * Busca recursivamente o item do sidebar que corresponde à rota atual.
      *
-     * @param  array<int, array<string, mixed>>  $items
+     * @param  array<int, array<string, mixed>> $items
      * @return array<string, string>|null
      */
     function searchInSidebarItems(array $items, string $currentRoute): ?array
@@ -50,7 +50,7 @@ if (! function_exists('searchInSidebarItems')) {
                 && ($item['route'] ?? null) === $currentRoute
             ) {
                 return [
-                    'title' => (string) ($item['title'] ?? ''),
+                    'title'       => (string) ($item['title'] ?? ''),
                     'description' => (string) ($item['description'] ?? ''),
                 ];
             }
@@ -68,11 +68,11 @@ if (! function_exists('searchInSidebarItems')) {
     }
 }
 
-if (! function_exists('sidebarDropContainsActiveRoute')) {
+if (!function_exists('sidebarDropContainsActiveRoute')) {
     /**
      * Indica se algum drop-item (em qualquer profundidade) corresponde à URL atual.
      *
-     * @param  array<int, array<string, mixed>>  $items
+     * @param array<int, array<string, mixed>> $items
      */
     function sidebarDropContainsActiveRoute(array $items): bool
     {
@@ -98,7 +98,7 @@ if (! function_exists('sidebarDropContainsActiveRoute')) {
     }
 }
 
-if (! function_exists('getCurrentTitle')) {
+if (!function_exists('getCurrentTitle')) {
     /**
      * Retorna o título da página atual com base na rota.
      */
@@ -110,7 +110,7 @@ if (! function_exists('getCurrentTitle')) {
     }
 }
 
-if (! function_exists('getCurrentDescription')) {
+if (!function_exists('getCurrentDescription')) {
     /**
      * Retorna a descrição da página atual com base na rota.
      */
@@ -122,7 +122,7 @@ if (! function_exists('getCurrentDescription')) {
     }
 }
 
-if (! function_exists('getDataPage')) {
+if (!function_exists('getDataPage')) {
     /**
      * Retorna título e descrição da página atual com base na rota.
      *
@@ -133,13 +133,13 @@ if (! function_exists('getDataPage')) {
         $item = getSidebarItemByRoute($currentRoute);
 
         return [
-            'title' => $item ? $item['title'] : '',
+            'title'       => $item ? $item['title'] : '',
             'description' => $item ? $item['description'] : '',
         ];
     }
 }
 
-if (! function_exists('buildSidebarExportTree')) {
+if (!function_exists('buildSidebarExportTree')) {
     /**
      * Retorna a árvore de exportação do sidebar, buscando do cache ou montando
      * a partir do banco (e já armazenando o resultado em cache) quando ausente.
@@ -163,16 +163,15 @@ if (! function_exists('buildSidebarExportTree')) {
                 ->orderBy('sort')
                 ->get();
 
-            return $menus
+            return array_values($menus
                 ->concat($hiddenMenus)
                 ->map(fn (Menu $menu): array => exportSidebarMenuNode($menu))
-                ->values()
-                ->all();
+                ->all());
         });
     }
 }
 
-if (! function_exists('exportSidebarMenuNode')) {
+if (!function_exists('exportSidebarMenuNode')) {
     /**
      * Converte um menu (e seus filhos, se houver) para o formato de exportação do sidebar.
      *
@@ -186,41 +185,41 @@ if (! function_exists('exportSidebarMenuNode')) {
                 'text' => $menu->label,
             ],
             MenuType::DROP => array_filter([
-                'type' => 'drop',
-                'icon' => $menu->icon,
-                'label' => $menu->label,
-                'title' => $menu->title,
+                'type'        => 'drop',
+                'icon'        => $menu->icon,
+                'label'       => $menu->label,
+                'title'       => $menu->title,
                 'description' => $menu->description,
-                'items' => $menu->children
-                    ->reject(fn (Menu $child): bool => $child->type === MenuType::HIDDEN)
-                    ->map(fn (Menu $child): array => exportSidebarMenuNode($child))
+                'items'       => $menu->children
+                    ->reject(fn (Menu $menu): bool => $menu->type === MenuType::HIDDEN)
+                    ->map(fn (Menu $menu): array => exportSidebarMenuNode($menu))
                     ->values()
                     ->all(),
             ], fn (mixed $value): bool => $value !== null),
             MenuType::DROP_ITEM => array_filter([
-                'type' => 'drop-item',
-                'route' => $menu->route,
-                'url' => $menu->url,
-                'label' => $menu->label,
-                'title' => $menu->title,
+                'type'        => 'drop-item',
+                'route'       => $menu->route,
+                'url'         => $menu->url,
+                'label'       => $menu->label,
+                'title'       => $menu->title,
                 'description' => $menu->description,
             ], fn (mixed $value): bool => $value !== null),
             MenuType::HIDDEN => array_filter([
-                'type' => 'hidden',
-                'icon' => $menu->icon,
-                'route' => $menu->route,
-                'url' => $menu->url,
-                'label' => $menu->label,
-                'title' => $menu->title,
+                'type'        => 'hidden',
+                'icon'        => $menu->icon,
+                'route'       => $menu->route,
+                'url'         => $menu->url,
+                'label'       => $menu->label,
+                'title'       => $menu->title,
                 'description' => $menu->description,
             ], fn (mixed $value): bool => $value !== null),
             default => array_filter([
-                'type' => 'item',
-                'icon' => $menu->icon,
-                'route' => $menu->route,
-                'url' => $menu->url,
-                'label' => $menu->label,
-                'title' => $menu->title,
+                'type'        => 'item',
+                'icon'        => $menu->icon,
+                'route'       => $menu->route,
+                'url'         => $menu->url,
+                'label'       => $menu->label,
+                'title'       => $menu->title,
                 'description' => $menu->description,
             ], fn (mixed $value): bool => $value !== null),
         };
