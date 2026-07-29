@@ -14,7 +14,7 @@ document.addEventListener('alpine:init', () => {
         floating: Boolean(options.floating),
         labelActive: options.labelActive ?? 'top-1.5 translate-y-0 text-xs',
         labelRest: options.labelRest ?? 'top-1/2 -translate-y-1/2 text-sm',
-        minLength: Number(options.minLength ?? 8),
+        minLength: Number(options.minLength ?? 10),
         requireUpper: Boolean(options.requireUpper ?? true),
         requireLower: Boolean(options.requireLower ?? true),
         requireNumber: Boolean(options.requireNumber ?? true),

@@ -350,7 +350,7 @@ return new class extends Component
             <p class="mb-2">Corrija os problemas abaixo e tente novamente:</p>
             <ul class="mb-0 list-disc space-y-1 pl-4">
                 <li>O e-mail informado já está em uso.</li>
-                <li>A senha precisa ter pelo menos 8 caracteres.</li>
+                <li>A senha precisa ter pelo menos 10 caracteres.</li>
                 <li>Aceite os termos de uso para continuar.</li>
             </ul>
         </x-ui.alert>
@@ -365,7 +365,7 @@ return new class extends Component
                     <p class="mb-2">Corrija os problemas abaixo e tente novamente:</p>
                     <ul class="mb-0 list-disc space-y-1 pl-4">
                         <li>O e-mail informado já está em uso.</li>
-                        <li>A senha precisa ter pelo menos 8 caracteres.</li>
+                        <li>A senha precisa ter pelo menos 10 caracteres.</li>
                         <li>Aceite os termos de uso para continuar.</li>
                     </ul>
                 </div>
@@ -584,7 +584,7 @@ return new class extends Component
                     <p class="mb-2">Corrija os problemas abaixo e tente novamente:</p>
                     <ul class="mb-0 list-disc space-y-1 pl-4">
                         <li>O e-mail informado já está em uso.</li>
-                        <li>A senha precisa ter pelo menos 8 caracteres.</li>
+                        <li>A senha precisa ter pelo menos 10 caracteres.</li>
                         <li>Aceite os termos de uso para continuar.</li>
                     </ul>
                 </x-ui.alert>

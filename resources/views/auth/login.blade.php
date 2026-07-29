@@ -87,6 +87,13 @@ return new #[Layout('layouts::auth')] class extends Component
 ?>
 
 <form class="flex flex-col gap-4" wire:submit="login">
+
+	@if (session()->has('status'))
+		<x-ui.alert color="primary" icon>
+			{{ session('status') }}
+		</x-ui.alert>
+	@endif
+
 	<x-forms.input
 		type="email"
 		name="email"

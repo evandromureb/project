@@ -11,7 +11,7 @@ return new class extends Component
     public function save(): void
     {
         $this->validate([
-            'password' => ['required', 'min:8', 'confirmed'],
+            'password' => ['required', 'min:10', 'confirmed'],
         ]);
     }
 };
@@ -78,7 +78,7 @@ BLADE;
         </div>
     </div>
     <ul id="input-password-password-rules" class="mb-0 flex list-none flex-col gap-1 p-0" aria-label="Requisitos da senha">
-        <li class="flex items-center gap-1.5 text-xs text-muted-foreground"><i class="bi bi-circle leading-none" aria-hidden="true"></i><span>Mínimo de 8 caracteres</span></li>
+        <li class="flex items-center gap-1.5 text-xs text-muted-foreground"><i class="bi bi-circle leading-none" aria-hidden="true"></i><span>Mínimo de 10 caracteres</span></li>
         <li class="flex items-center gap-1.5 text-xs text-muted-foreground"><i class="bi bi-circle leading-none" aria-hidden="true"></i><span>Uma letra maiúscula</span></li>
         <li class="flex items-center gap-1.5 text-xs text-muted-foreground"><i class="bi bi-circle leading-none" aria-hidden="true"></i><span>Uma letra minúscula</span></li>
         <li class="flex items-center gap-1.5 text-xs text-muted-foreground"><i class="bi bi-circle leading-none" aria-hidden="true"></i><span>Um número</span></li>

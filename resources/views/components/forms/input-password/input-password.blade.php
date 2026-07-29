@@ -19,7 +19,7 @@
     'capsLock' => true,
     'generate' => null,
     'copyable' => false,
-    'minLength' => 8,
+    'minLength' => 10,
     'requireUpper' => true,
     'requireLower' => true,
     'requireNumber' => true,
