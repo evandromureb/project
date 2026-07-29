@@ -6,7 +6,14 @@ Route::livewire('auth/login', 'auth::login')->name('login');
 Route::livewire('auth/register', 'auth::register')->name('register');
 Route::livewire('auth/forgot-password', 'auth::forgot-password')->name('password.request');
 Route::livewire('auth/reset-password/{token?}', 'auth::reset-password')->name('password.reset');
-Route::livewire('auth/verify-email', 'auth::verify-email')->name('verification.notice');
+Route::livewire('auth/verify-email', 'auth::verify-email')
+    ->middleware('auth')
+    ->name('verification.notice');
+
+Route::livewire('/verify-email/{id}/{hash}', 'auth::verify-email')
+    ->middleware(['auth', 'signed', 'throttle:6,1'])
+    ->name('verification.verify');
+
 Route::livewire('auth/confirm-password', 'auth::confirm-password')->name('password.confirm');
 Route::livewire('auth/new-password', 'auth::new-password')->name('password.new');
 Route::livewire('auth/otp', 'auth::otp')->name('otp');
