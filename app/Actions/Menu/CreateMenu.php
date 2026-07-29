@@ -83,7 +83,7 @@ class CreateMenu
 
     private function uniqueKey(string $label, string $type): string
     {
-        $base = Str::slug($label.$type) ?: 'item';
+        $base = Str::slug($label.'-'.$type) ?: 'item';
         $key = $base;
         $suffix = 1;
 

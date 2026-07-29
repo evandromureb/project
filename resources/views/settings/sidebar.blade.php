@@ -540,6 +540,76 @@ return new class extends Component
         $this->statusTone = 'success';
     }
 
+    public function exportSidebar(): void
+    {
+        dd($this->buildExportTree());
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function buildExportTree(): array
+    {
+        return $this->menus
+            ->concat($this->hiddenMenus)
+            ->map(fn (Menu $menu): array => $this->exportNode($menu))
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function exportNode(Menu $menu): array
+    {
+        $node = match ($menu->type) {
+            MenuType::SEPARATOR => [
+                'type' => 'separator',
+                'text' => $menu->label,
+            ],
+            MenuType::DROP => array_filter([
+                'type' => 'drop',
+                'icon' => $menu->icon,
+                'label' => $menu->label,
+                'title' => $menu->title,
+                'description' => $menu->description,
+                'items' => $menu->children
+                    ->reject(fn (Menu $child): bool => $child->type === MenuType::HIDDEN)
+                    ->map(fn (Menu $child): array => $this->exportNode($child))
+                    ->values()
+                    ->all(),
+            ], fn (mixed $value): bool => $value !== null),
+            MenuType::DROP_ITEM => array_filter([
+                'type' => 'drop-item',
+                'route' => $menu->route,
+                'url' => $menu->url,
+                'label' => $menu->label,
+                'title' => $menu->title,
+                'description' => $menu->description,
+            ], fn (mixed $value): bool => $value !== null),
+            MenuType::HIDDEN => array_filter([
+                'type' => 'hidden',
+                'icon' => $menu->icon,
+                'route' => $menu->route,
+                'url' => $menu->url,
+                'label' => $menu->label,
+                'title' => $menu->title,
+                'description' => $menu->description,
+            ], fn (mixed $value): bool => $value !== null),
+            default => array_filter([
+                'type' => 'item',
+                'icon' => $menu->icon,
+                'route' => $menu->route,
+                'url' => $menu->url,
+                'label' => $menu->label,
+                'title' => $menu->title,
+                'description' => $menu->description,
+            ], fn (mixed $value): bool => $value !== null),
+        };
+
+        return array_merge($menu->meta ?? [], $node);
+    }
+
     private function fillForm(Menu $menu): void
     {
         $this->selectedKey = $menu->key;
@@ -633,13 +703,19 @@ return new class extends Component
             title="Estrutura do menu"
             subtitle="Arraste para reordenar. Use os botões de cada item."
         >
-            <div class="mb-4 flex flex-wrap items-center gap-2">
-                <x-ui.button type="button" size="sm" wire:click="startCreate" icon="bi-plus-lg">
-                    Novo
-                </x-ui.button>
+            <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
+                <div class="flex flex-wrap items-center gap-2">
+                    <x-ui.button type="button" size="sm" wire:click="startCreate" icon="bi-plus-lg">
+                        Novo
+                    </x-ui.button>
 
-                <x-ui.button type="button" size="sm" variant="outline" wire:click="startCreateHidden" icon="bi-eye-slash">
-                    Novo oculto
+                    <x-ui.button type="button" size="sm" variant="outline" wire:click="startCreateHidden" icon="bi-eye-slash">
+                        Novo oculto
+                    </x-ui.button>
+                </div>
+
+                <x-ui.button type="button" size="sm" color="warning" icon="bi-download" variant="outline" wire:click="exportSidebar">
+                    Exportar
                 </x-ui.button>
             </div>
 
