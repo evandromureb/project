@@ -18,20 +18,19 @@
 				<a href="{{ route('dashboard') }}" class="flex items-center justify-center" aria-label="{{ config('app.name') }}">
 					<x-layouts::brand-logo class="h-10 w-auto max-w-xs object-contain sm:h-12" />
 				</a>
-
 				<div class="card w-full shadow-card">
 					<div class="card-body flex flex-col gap-6 p-6 sm:p-8">
-						@if (filled($heading ?? null) || filled($description ?? null))
+						@if (filled(getCurrentTitle(Route::currentRouteName() ?? '') ?? null) || filled(getCurrentTitle(Route::currentRouteName() ?? '') ?? null))
 							<div class="flex flex-col gap-2 text-center">
-								@if (filled($heading ?? null))
+								@if (filled(getCurrentTitle(Route::currentRouteName() ?? '') ?? null))
 									<h1 class="m-0 text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
-										{{ $heading }}
+										{{ getCurrentTitle(Route::currentRouteName() ?? '') }}
 									</h1>
 								@endif
 
-								@if (filled($description ?? null))
+								@if (filled(getCurrentDescription(Route::currentRouteName() ?? '') ?? null))
 									<p class="m-0 text-sm leading-relaxed text-muted-foreground">
-										{{ $description }}
+										{{ getCurrentDescription(Route::currentRouteName() ?? '') }}
 									</p>
 								@endif
 							</div>

@@ -3,17 +3,14 @@
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-return new #[Layout('layouts::auth', [
-	'title' => 'Entrar',
-	'heading' => 'Bem-vindo de volta!',
-	'description' => 'Faça login para continuar.',
-])] class extends Component
+return new #[Layout('layouts::auth')] class extends Component
 {
 	//
 };
 ?>
 
 <form class="flex flex-col gap-4" @submit.prevent>
+	<x-ui.alert color="danger" icon>Ocorreu um erro ao processar sua solicitação.</x-ui.alert>
 	<x-forms.input
 		type="email"
 		name="email"
