@@ -1,5 +1,5 @@
 @php
-	$data = config('dashboard.sidebar');
+	$data = Cache::get('sidebarMenu');
 @endphp
 
 <div

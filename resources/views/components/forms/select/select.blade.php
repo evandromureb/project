@@ -514,6 +514,7 @@
             @endif
             <input
                 type="hidden"
+                id="{{ $inputId }}"
                 data-select-model
                 value="{{ e(json_encode($initialValue, JSON_UNESCAPED_UNICODE)) }}"
                 {{ $wireAttributes }}
@@ -521,6 +522,7 @@
         @else
             <input
                 type="hidden"
+                id="{{ $inputId }}"
                 data-select-model
                 @if (filled($name)) name="{{ $name }}" @endif
                 value="{{ (string) $initialValue }}"
@@ -529,7 +531,7 @@
         @endif
 
         @if ($hasLabel && ! $floating)
-            <label for="{{ $inputId }}" class="{{ $labelSizeClasses }} font-medium text-foreground">
+            <label id="{{ $inputId }}-label" for="{{ $inputId }}" data-select-caption class="{{ $labelSizeClasses }} font-medium text-foreground">
                 @isset($labelSlot)
                     {{ $labelSlot }}
                 @else
@@ -543,13 +545,13 @@
 
         <div
             data-select-trigger
-            id="{{ $inputId }}"
             role="combobox"
             tabindex="0"
             aria-haspopup="listbox"
             aria-controls="{{ $listboxId }}"
             aria-expanded="false"
             aria-disabled="{{ $isDisabled ? 'true' : 'false' }}"
+            @if ($hasLabel) aria-labelledby="{{ $inputId }}-label" @endif
             @if ($describedBy !== '') aria-describedby="{{ $describedBy }}" @endif
             @if ($hasError) aria-invalid="true" @endif
             @if ($required) aria-required="true" @endif
@@ -613,6 +615,7 @@
 
                 @if ($floating && $hasLabel)
                     <label
+                        id="{{ $inputId }}-label"
                         for="{{ $inputId }}"
                         data-select-floating-label
                         @class([

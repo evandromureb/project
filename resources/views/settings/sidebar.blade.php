@@ -535,7 +535,9 @@ return new class extends Component
 
     public function exportSidebar(): void
     {
-        dd($this->buildExportTree());
+		Cache::put('sidebarMenu', $this->buildExportTree());
+        //dd(Cache::get('sidebarMenu'));
+		$this->dispatch('toast', type: 'success', message: 'Sidebar exportado com sucesso');
     }
 
     /**
@@ -707,9 +709,21 @@ return new class extends Component
                     </x-ui.button>
                 </div>
 
-                <x-ui.button type="button" size="sm" color="warning" icon="bi-download" variant="outline" wire:click="exportSidebar">
-                    Exportar
-                </x-ui.button>
+				<x-ui.modal.modal-trigger size="sm" name="static" color="warning" icon="bi-download" variant="outline">Exportar</x-ui.modal.modal-trigger>
+
+				<x-ui.modal
+					name="static"
+					title="Exportar sidebar"
+					centered
+					staticBackdrop
+				>
+					Este modal só fecha pelo botão ou pela tecla Esc — clicar fora não fecha.
+
+					<x-slot:footer>
+						<x-ui.modal.modal-trigger name="static" action="close" variant="outline" color="secondary">Cancelar</x-ui.modal.modal-trigger>
+						<x-ui.modal.modal-trigger name="static" color="primary" wire:click="exportSidebar">Exportar</x-ui.modal.modal-trigger>
+					</x-slot:footer>
+				</x-ui.modal>
             </div>
 
             <div wire:key="menu-tree-{{ $treeVersion }}" class="min-w-0 overflow-x-auto rounded-md border border-border bg-background p-2">

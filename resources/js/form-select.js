@@ -536,6 +536,16 @@ function handleSearchKeydown(root, event) {
 }
 
 document.addEventListener('click', (event) => {
+    const label = event.target.closest('[data-select-caption]');
+
+    if (label) {
+        const root = getRoot(label);
+        const trigger = root ? getTrigger(root) : null;
+        trigger?.focus();
+
+        return;
+    }
+
     const clearBtn = event.target.closest('[data-select-clear]');
 
     if (clearBtn) {

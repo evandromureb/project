@@ -34,6 +34,7 @@
     :icon="$icon"
     :iconPosition="$iconPosition"
     @click="{{ $clickExpr }}"
+    {{ $attributes }}
 >
     {{ $slot }}
 </x-ui.button>

@@ -1,5 +1,7 @@
 <?php
 
+use Illuminate\Support\Facades\Cache;
+
 if (!function_exists('getSidebarItemByRoute')) {
     /**
      * Retorna o item do sidebar correspondente à rota informada.
@@ -8,7 +10,7 @@ if (!function_exists('getSidebarItemByRoute')) {
      */
     function getSidebarItemByRoute(string $currentRoute): ?array
     {
-        $sidebarConfig = config('dashboard.sidebar');
+        $sidebarConfig = Cache::get('sidebarMenu', config('dashboard.sidebar'));
         $authConfig    = config('dashboard.auth');
 
         if ($sidebarConfig) {
