@@ -108,14 +108,7 @@ return new class extends Component
                 || ($type === MenuType::DROP_ITEM && ! $hasDrops))
             ->map(fn (MenuType $type): array => [
                 'value' => $type->value,
-                'label' => match ($type) {
-                    MenuType::ITEM => 'Item',
-                    MenuType::DROP => 'Drop',
-                    MenuType::DROP_ITEM => 'Drop item',
-                    MenuType::SEPARATOR => 'Separator',
-                    MenuType::HIDDEN => 'Hidden',
-                    default => $type->value,
-                },
+                'label' => $type->label(),
             ])
             ->values()
             ->all();

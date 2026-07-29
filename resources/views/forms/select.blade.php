@@ -573,11 +573,11 @@ HTML;
 <div class="flex flex-col gap-6">
     <x-ui.card>
         <p class="mb-0 text-sm text-muted-foreground [&_code]:font-mono [&_code]:text-[0.8125rem] [&_code]:text-danger">
-            O componente <code>&lt;x-forms.select&gt;</code> oferece um select customizado (listbox
-            teletransportado) com busca, múltipla escolha, grupos, ícones, descrições e teclado —
-            além do modo <code>native</code> com <code>&lt;select&gt;</code> nativo. Sync com Livewire
-            via <code>x-modelable="value"</code> + <code>wire:model</code>; em formulários clássicos,
-            use <code>name</code> (ou <code>name[]</code> no múltiplo).
+            O componente <code>&lt;x-forms.select&gt;</code> oferece um select customizado (JS puro,
+            sem Alpine) com busca, múltipla escolha, grupos, ícones, descrições e teclado — além do
+            modo <code>native</code> com <code>&lt;select&gt;</code> nativo. Sync com Livewire via
+            <code>wire:model</code> direto no input oculto interno; em formulários clássicos, use
+            <code>name</code> (ou <code>name[]</code> no múltiplo).
         </p>
     </x-ui.card>
 

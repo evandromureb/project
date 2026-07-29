@@ -348,27 +348,16 @@
 
     $resolvedCloseOnSelect = $closeOnSelect ?? ! $multiple;
 
-    $alpineConfig = [
-        'options' => $normalizedOptions,
-        'value' => $initialValue,
-        'multiple' => (bool) $multiple,
-        'searchable' => (bool) $searchable,
-        'clearable' => (bool) $clearable,
-        'disabled' => (bool) $isDisabled,
-        'readonly' => (bool) $isReadonly,
-        'floating' => (bool) $floating,
-        'maxSelected' => $maxSelected !== null ? (int) $maxSelected : null,
-        'closeOnSelect' => (bool) $resolvedCloseOnSelect,
-        'emptyText' => (string) $emptyText,
-        'placeholder' => (string) $placeholder,
-        'labelActive' => $floatingLabelActive,
-        'labelRest' => $floatingLabelRest,
-    ];
-
     $wireAttributes = $attributes->whereStartsWith('wire:model');
     $selectAttributes = $attributes
         ->except(['class', 'disabled', 'readonly'])
         ->whereDoesntStartWith('wire:model');
+
+    $selectedOption = $multiple
+        ? null
+        : collect($normalizedOptions)->firstWhere('value', (string) $initialValue);
+
+    $hasValue = $multiple ? $initialValue !== [] : $initialValue !== '';
 @endphp
 
 @if ($native)
@@ -416,6 +405,7 @@
                                 <optgroup label="{{ $group['label'] }}">
                                     @foreach ($group['options'] as $option)
                                         <option
+                                            wire:key="{{ $inputId }}-option-{{ $option['value'] }}"
                                             value="{{ $option['value'] }}"
                                             @disabled($option['disabled'])
                                             @selected($multiple ? in_array($option['value'], $initialValue, true) : $initialValue === $option['value'])
@@ -425,6 +415,7 @@
                             @else
                                 @foreach ($group['options'] as $option)
                                     <option
+                                        wire:key="{{ $inputId }}-option-{{ $option['value'] }}"
                                         value="{{ $option['value'] }}"
                                         @disabled($option['disabled'])
                                         @selected($multiple ? in_array($option['value'], $initialValue, true) : $initialValue === $option['value'])
@@ -435,6 +426,7 @@
                     @else
                         @foreach ($normalizedOptions as $option)
                             <option
+                                wire:key="{{ $inputId }}-option-{{ $option['value'] }}"
                                 value="{{ $option['value'] }}"
                                 @disabled($option['disabled'])
                                 @selected($multiple ? in_array($option['value'], $initialValue, true) : $initialValue === $option['value'])
@@ -502,27 +494,38 @@
     </div>
 @else
     <div
-        x-data="formSelect(@js($alpineConfig))"
-        x-modelable="value"
-        x-ref="root"
-        @click.outside="closeIfOutside($event.target)"
+        data-select
+        data-select-multiple="{{ $multiple ? '1' : '0' }}"
+        data-select-searchable="{{ $searchable ? '1' : '0' }}"
+        data-select-clearable="{{ $clearable ? '1' : '0' }}"
+        data-select-close-on-select="{{ $resolvedCloseOnSelect ? '1' : '0' }}"
+        data-select-max-selected="{{ $maxSelected !== null ? (int) $maxSelected : '' }}"
+        data-select-disabled="{{ $isDisabled ? '1' : '0' }}"
+        data-select-readonly="{{ $isReadonly ? '1' : '0' }}"
+        data-select-placeholder="{{ $floating ? ' ' : $placeholder }}"
+        data-select-empty-text="{{ $emptyText }}"
         {{ $attributes->only('class')->class(['flex w-full flex-col gap-1.5']) }}
-        {{ $wireAttributes }}
     >
-        <input
-            type="hidden"
-            x-ref="hidden"
-            value="{{ $multiple ? e(json_encode($initialValue, JSON_UNESCAPED_UNICODE)) : e((string) $initialValue) }}"
-        />
-
-        @if (filled($name))
-            @if ($multiple)
-                <template x-for="(item, index) in value" x-bind:key="'select-hidden-' + index + '-' + item">
-                    <input type="hidden" name="{{ $name }}[]" x-bind:value="item" />
-                </template>
-            @else
-                <input type="hidden" name="{{ $name }}" x-bind:value="value" />
+        @if ($multiple)
+            @if (filled($name))
+                @foreach ($initialValue as $val)
+                    <input type="hidden" name="{{ $name }}[]" value="{{ $val }}" data-select-name-input />
+                @endforeach
             @endif
+            <input
+                type="hidden"
+                data-select-model
+                value="{{ e(json_encode($initialValue, JSON_UNESCAPED_UNICODE)) }}"
+                {{ $wireAttributes }}
+            />
+        @else
+            <input
+                type="hidden"
+                data-select-model
+                @if (filled($name)) name="{{ $name }}" @endif
+                value="{{ (string) $initialValue }}"
+                {{ $wireAttributes }}
+            />
         @endif
 
         @if ($hasLabel && ! $floating)
@@ -539,21 +542,17 @@
         @endif
 
         <div
-            x-ref="trigger"
+            data-select-trigger
             id="{{ $inputId }}"
             role="combobox"
             tabindex="0"
             aria-haspopup="listbox"
             aria-controls="{{ $listboxId }}"
-            x-bind:aria-expanded="open.toString()"
-            x-bind:aria-disabled="disabled.toString()"
+            aria-expanded="false"
+            aria-disabled="{{ $isDisabled ? 'true' : 'false' }}"
             @if ($describedBy !== '') aria-describedby="{{ $describedBy }}" @endif
             @if ($hasError) aria-invalid="true" @endif
             @if ($required) aria-required="true" @endif
-            @click="toggle()"
-            @keydown="onTriggerKeydown($event)"
-            @focus="onFocus()"
-            @blur="onBlur()"
             @class([$controlClasses, 'w-full'])
             {{ $selectAttributes->except(['placeholder']) }}
         >
@@ -564,55 +563,64 @@
             @endif
 
             <div @class(['relative min-w-0 flex-1', $floating ? 'self-stretch' : null])>
-                <div @class([
+                <div data-select-display @class([
                     'flex min-w-0 items-center gap-1.5',
                     $multiple ? 'flex-wrap' : 'flex-nowrap',
                     $floating ? 'h-full min-h-0 pt-4 pb-1' : null,
                 ])>
                     @if ($multiple)
-                        <template x-for="opt in selectedOptions" x-bind:key="'chip-' + opt.value">
-                            <span class="inline-flex max-w-full items-center font-medium {{ $chipToneClasses }} {{ $chipSizeClasses }} {{ $chipRadiusClasses }}">
-                                <template x-if="opt.icon">
-                                    <i class="bi leading-none" x-bind:class="opt.icon" aria-hidden="true"></i>
-                                </template>
-                                <span class="max-w-[10rem] truncate" x-text="opt.label"></span>
-                                <button
-                                    type="button"
-                                    x-show="canEdit"
-                                    @click.stop="removeValue(opt.value)"
-                                    class="-me-0.5 ms-0.5 inline-flex shrink-0 cursor-pointer items-center justify-center rounded-full p-0.5 opacity-70 transition-opacity hover:opacity-100"
-                                    x-bind:aria-label="'Remover ' + opt.label"
-                                >
-                                    <i class="bi bi-x text-xs leading-none" aria-hidden="true"></i>
-                                </button>
+                        @foreach ($normalizedOptions as $option)
+                            @continue(! in_array($option['value'], $initialValue, true))
+                            <span
+                                data-select-chip
+                                data-value="{{ $option['value'] }}"
+                                class="inline-flex max-w-full items-center font-medium {{ $chipToneClasses }} {{ $chipSizeClasses }} {{ $chipRadiusClasses }}"
+                            >
+                                @if ($option['icon'])
+                                    <i class="bi {{ $option['icon'] }} leading-none" aria-hidden="true"></i>
+                                @endif
+                                <span class="max-w-[10rem] truncate">{{ $option['label'] }}</span>
+                                @if (! $isDisabled && ! $isReadonly)
+                                    <button
+                                        type="button"
+                                        data-select-remove-chip
+                                        class="-me-0.5 ms-0.5 inline-flex shrink-0 cursor-pointer items-center justify-center rounded-full p-0.5 opacity-70 transition-opacity hover:opacity-100"
+                                        aria-label="Remover {{ $option['label'] }}"
+                                    >
+                                        <i class="bi bi-x text-xs leading-none" aria-hidden="true"></i>
+                                    </button>
+                                @endif
                             </span>
-                        </template>
+                        @endforeach
                         <span
-                            x-show="! hasValue"
-                            class="truncate text-muted-foreground"
-                            x-text="@js($floating ? ' ' : $placeholder)"
-                        ></span>
+                            data-select-placeholder-text
+                            @class(['truncate text-muted-foreground', 'hidden' => $hasValue])
+                        >{{ $floating ? ' ' : $placeholder }}</span>
                     @else
-                        <template x-if="selectedOptions[0]?.icon">
+                        @if ($selectedOption && $selectedOption['icon'])
                             <i
-                                class="bi shrink-0 leading-none {{ $sizeIconClasses }} {{ $stateTextClasses }}"
-                                x-bind:class="selectedOptions[0].icon"
+                                data-select-value-icon
+                                class="bi {{ $selectedOption['icon'] }} shrink-0 leading-none {{ $sizeIconClasses }} {{ $stateTextClasses }}"
                                 aria-hidden="true"
                             ></i>
-                        </template>
+                        @endif
                         <span
-                            class="min-w-0 flex-1 truncate"
-                            x-bind:class="hasValue ? 'text-foreground' : 'text-muted-foreground'"
-                            x-text="hasValue ? selectedLabel : @js($floating ? ' ' : $placeholder)"
-                        >{{ filled($initialValue) ? (collect($normalizedOptions)->firstWhere('value', (string) $initialValue)['label'] ?? $placeholder) : ($floating ? ' ' : $placeholder) }}</span>
+                            data-select-label
+                            @class(['min-w-0 flex-1 truncate', $selectedOption ? 'text-foreground' : 'text-muted-foreground'])
+                        >{{ $selectedOption['label'] ?? ($floating ? ' ' : $placeholder) }}</span>
                     @endif
                 </div>
 
                 @if ($floating && $hasLabel)
                     <label
                         for="{{ $inputId }}"
-                        class="pointer-events-none absolute start-0 z-10 text-muted-foreground transition-all duration-150 ease-out"
-                        x-bind:class="floatingLabelClasses"
+                        data-select-floating-label
+                        @class([
+                            'pointer-events-none absolute start-0 z-10 text-muted-foreground transition-all duration-150 ease-out',
+                            $hasValue ? $floatingLabelActive : $floatingLabelRest,
+                        ])
+                        data-label-active="{{ $floatingLabelActive }}"
+                        data-label-rest="{{ $floatingLabelRest }}"
                     >
                         @isset($labelSlot)
                             {{ $labelSlot }}
@@ -635,10 +643,11 @@
                 @if ($clearable)
                     <button
                         type="button"
-                        x-show="hasValue && canEdit"
-                        x-cloak
-                        @click.stop="clear()"
-                        class="relative z-10 flex shrink-0 cursor-pointer items-center justify-center self-center rounded-full p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                        data-select-clear
+                        @class([
+                            'relative z-10 flex shrink-0 cursor-pointer items-center justify-center self-center rounded-full p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground',
+                            'hidden' => ! $hasValue || $isDisabled || $isReadonly,
+                        ])
                         aria-label="Limpar seleção"
                     >
                         <i class="bi bi-x-lg text-xs leading-none" aria-hidden="true"></i>
@@ -646,8 +655,8 @@
                 @endif
 
                 <span
+                    data-select-chevron
                     class="relative z-10 inline-flex shrink-0 self-center items-center justify-center text-muted-foreground transition-transform duration-150"
-                    x-bind:class="{ 'rotate-180': open }"
                     aria-hidden="true"
                 >
                     <i class="bi bi-chevron-down leading-none {{ $sizeIconClasses }}"></i>
@@ -661,101 +670,48 @@
             @endif
         </div>
 
-        <template x-teleport="body">
-            <div
-                x-ref="menu"
-                x-show="open"
-                x-cloak
-                x-bind:style="menuStyle"
-                id="{{ $listboxId }}"
-                role="listbox"
-                @if ($multiple) aria-multiselectable="true" @endif
-                class="overflow-hidden rounded-lg border border-border bg-card shadow-lg"
-                x-transition:enter="transition ease-out duration-100"
-                x-transition:enter-start="opacity-0"
-                x-transition:enter-end="opacity-100"
-                x-transition:leave="transition ease-in duration-75"
-                x-transition:leave-start="opacity-100"
-                x-transition:leave-end="opacity-0"
-            >
-                @if ($searchable)
-                    <div class="border-b border-border p-2">
-                        <div class="flex items-center gap-2 rounded-md border border-border bg-muted/40 px-2.5 py-1.5">
-                            <i class="bi bi-search text-sm text-muted-foreground" aria-hidden="true"></i>
-                            <input
-                                x-ref="search"
-                                type="text"
-                                x-model="search"
-                                @input="onSearchInput()"
-                                @keydown="onSearchKeydown($event)"
-                                @click.stop
-                                placeholder="{{ $searchPlaceholder }}"
-                                class="min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
-                                autocomplete="off"
-                            />
-                        </div>
+        <div
+            data-select-menu
+            id="{{ $listboxId }}"
+            role="listbox"
+            @if ($multiple) aria-multiselectable="true" @endif
+            class="hidden overflow-hidden rounded-lg border border-border bg-card shadow-lg"
+            style="position:fixed; z-index:1080;"
+        >
+            @if ($searchable)
+                <div class="border-b border-border p-2">
+                    <div class="flex items-center gap-2 rounded-md border border-border bg-muted/40 px-2.5 py-1.5">
+                        <i class="bi bi-search text-sm text-muted-foreground" aria-hidden="true"></i>
+                        <input
+                            type="text"
+                            data-select-search
+                            placeholder="{{ $searchPlaceholder }}"
+                            class="min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
+                            autocomplete="off"
+                        />
                     </div>
-                @endif
-
-                <div class="max-h-60 overflow-y-auto py-1">
-                    <template x-if="filteredOptions.length === 0">
-                        <div class="px-3 py-6 text-center text-sm text-muted-foreground" x-text="emptyText"></div>
-                    </template>
-
-                    <template x-for="(item, index) in visibleItems" x-bind:key="'item-' + index + '-' + (item.type === 'group' ? item.label : item.option.value)">
-                        <div>
-                            <template x-if="item.type === 'group'">
-                                <div
-                                    class="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground"
-                                    x-text="item.label"
-                                ></div>
-                            </template>
-
-                            <template x-if="item.type === 'option'">
-                                <button
-                                    type="button"
-                                    role="option"
-                                    x-bind:data-active="(activeIndex === index).toString()"
-                                    x-bind:aria-selected="isSelected(item.option.value).toString()"
-                                    x-bind:disabled="item.option.disabled || (isFull && ! isSelected(item.option.value))"
-                                    @mousedown.prevent="selectOption(item.option)"
-                                    @mouseenter="activeIndex = index"
-                                    class="flex w-full cursor-pointer items-start gap-2 px-3 py-2 text-start text-sm text-foreground transition-colors hover:bg-muted/70 disabled:cursor-not-allowed disabled:opacity-50"
-                                    x-bind:class="{
-                                        'bg-muted': activeIndex === index,
-                                        'bg-primary/10': isSelected(item.option.value) && activeIndex !== index,
-                                    }"
-                                >
-                                    <span class="mt-0.5 inline-flex size-4 shrink-0 items-center justify-center">
-                                        <i
-                                            class="bi bi-check-lg text-sm leading-none text-primary"
-                                            x-show="isSelected(item.option.value)"
-                                            x-cloak
-                                            aria-hidden="true"
-                                        ></i>
-                                    </span>
-
-                                    <template x-if="item.option.icon">
-                                        <i
-                                            class="bi mt-0.5 shrink-0 leading-none text-muted-foreground"
-                                            x-bind:class="item.option.icon"
-                                            aria-hidden="true"
-                                        ></i>
-                                    </template>
-
-                                    <span class="min-w-0 flex-1">
-                                        <span class="block truncate font-medium" x-text="item.option.label"></span>
-                                        <template x-if="item.option.description">
-                                            <span class="mt-0.5 block truncate text-xs text-muted-foreground" x-text="item.option.description"></span>
-                                        </template>
-                                    </span>
-                                </button>
-                            </template>
-                        </div>
-                    </template>
                 </div>
+            @endif
+
+            <div class="max-h-60 overflow-y-auto py-1" data-select-options>
+                <div class="px-3 py-6 text-center text-sm text-muted-foreground" data-select-empty @if ($normalizedOptions !== []) hidden @endif>{{ $emptyText }}</div>
+
+                @if ($groupedForNative !== [])
+                    @foreach ($groupedForNative as $group)
+                        @if (filled($group['label']))
+                            <div class="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground" data-select-group-label>{{ $group['label'] }}</div>
+                        @endif
+                        @foreach ($group['options'] as $option)
+                            @include('components.forms.select.option', ['option' => $option, 'multiple' => $multiple, 'initialValue' => $initialValue])
+                        @endforeach
+                    @endforeach
+                @else
+                    @foreach ($normalizedOptions as $option)
+                        @include('components.forms.select.option', ['option' => $option, 'multiple' => $multiple, 'initialValue' => $initialValue])
+                    @endforeach
+                @endif
             </div>
-        </template>
+        </div>
 
         @if ($hasError || $hasHint || $showCounter)
             <div class="flex items-start justify-between gap-3">
@@ -780,11 +736,7 @@
                 </div>
 
                 @if ($showCounter)
-                    <p
-                        id="{{ $counterId }}"
-                        class="mb-0 shrink-0 text-xs tabular-nums text-muted-foreground"
-                        x-text="maxSelected ? (count + '/' + maxSelected) : count"
-                    >{{ $multiple ? count($initialValue) : (filled($initialValue) ? 1 : 0) }}{{ $maxSelected !== null ? '/'.(int) $maxSelected : '' }}</p>
+                    <p id="{{ $counterId }}" data-select-counter class="mb-0 shrink-0 text-xs tabular-nums text-muted-foreground">{{ $multiple ? count($initialValue) : (filled($initialValue) ? 1 : 0) }}{{ $maxSelected !== null ? '/'.(int) $maxSelected : '' }}</p>
                 @endif
             </div>
         @endif

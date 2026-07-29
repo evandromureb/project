@@ -1,567 +1,667 @@
-// Lógica do <x-forms.select> como Alpine.data nomeado (não inline
-// no x-data) — comparações e arrows quebrariam wire:navigate se
-// ficassem soltas num atributo x-data="{...}". Ver reference/dropdown.md.
-document.addEventListener('alpine:init', () => {
-    Alpine.data('formSelect', (config = {}) => ({
-        options: Array.isArray(config.options) ? config.options : [],
-        value: config.multiple
-            ? (Array.isArray(config.value) ? [...config.value.map(String)] : [])
-            : (config.value === null || config.value === undefined || config.value === ''
-                ? ''
-                : String(config.value)),
-        multiple: Boolean(config.multiple),
-        searchable: Boolean(config.searchable),
-        clearable: config.clearable !== false,
-        disabled: Boolean(config.disabled),
-        readonly: Boolean(config.readonly),
-        floating: Boolean(config.floating),
-        maxSelected: config.maxSelected ?? null,
-        closeOnSelect: config.closeOnSelect !== undefined && config.closeOnSelect !== null
-            ? Boolean(config.closeOnSelect)
-            : ! Boolean(config.multiple),
-        emptyText: config.emptyText ?? 'Nenhum resultado',
-        placeholder: config.placeholder ?? 'Selecione…',
-        labelActive: config.labelActive ?? 'top-1.5 translate-y-0 text-xs',
-        labelRest: config.labelRest ?? 'top-1/2 -translate-y-1/2 text-sm',
+// JS puro (sem Alpine) para o <x-forms.select> na variante customizada.
+//
+// Por quê: o Livewire prefere preservar o mesmo nó do DOM entre re-renders
+// (morph). Qualquer estado JS "congelado" na inicialização de um elemento
+// (como a lista de opções de um x-data do Alpine) fica desatualizado quando
+// o servidor recalcula opções diferentes depois — e é exatamente esse tipo
+// de bug que causava o select de Tipo mostrar o rótulo errado após trocar o
+// valor. Aqui não existe nenhum estado cacheado: os rótulos e as opções
+// exibidas são sempre lidos direto do DOM (que o Blade recalcula a cada
+// request), então não há nada para "congelar". A única interação client-side
+// é delegada em `document`, então também não depende de nenhuma inicialização
+// por elemento — funciona igual antes ou depois de qualquer morph.
 
-        open: false,
-        search: '',
-        focused: false,
-        activeIndex: -1,
-        menuStyle: '',
-        typeahead: '',
-        _typeaheadTimer: null,
+function getRoot(el) {
+    return el.closest('[data-select]');
+}
 
-        init() {
-            this.$watch('value', () => {
-                this.syncHidden();
-                this.$dispatch('select-changed', {
-                    value: this.multiple ? [...this.value] : this.value,
-                });
-            });
+function isMultiple(root) {
+    return root.getAttribute('data-select-multiple') === '1';
+}
 
-            this.$nextTick(() => this.syncHidden());
+function isSearchable(root) {
+    return root.getAttribute('data-select-searchable') === '1';
+}
 
-            window.addEventListener('scroll', this._onReposition = () => {
-                if (this.open) {
-                    this.updatePosition();
-                }
-            }, true);
+function isDisabledOrReadonly(root) {
+    return root.getAttribute('data-select-disabled') === '1' || root.getAttribute('data-select-readonly') === '1';
+}
 
-            window.addEventListener('resize', this._onResize = () => {
-                if (this.open) {
-                    this.updatePosition();
-                }
-            });
-        },
+function getTrigger(root) {
+    return root.querySelector('[data-select-trigger]');
+}
 
-        destroy() {
-            if (this._onReposition) {
-                window.removeEventListener('scroll', this._onReposition, true);
+function getMenu(root) {
+    return root.querySelector('[data-select-menu]');
+}
+
+function getModelInput(root) {
+    return root.querySelector('[data-select-model]');
+}
+
+function getSearchInput(root) {
+    return root.querySelector('[data-select-search]');
+}
+
+function getOptions(root) {
+    return Array.from(root.querySelectorAll('[data-select-option]'));
+}
+
+function getVisibleOptions(root) {
+    return getOptions(root).filter((opt) => opt.style.display !== 'none' && ! opt.disabled);
+}
+
+function getSelectedValues(root) {
+    return getOptions(root)
+        .filter((opt) => opt.getAttribute('aria-selected') === 'true')
+        .map((opt) => opt.dataset.value);
+}
+
+function optionLabel(optionEl) {
+    const span = optionEl.querySelector('[data-select-option-label]');
+
+    return span ? span.textContent.trim() : (optionEl.dataset.value ?? '');
+}
+
+function isOpen(root) {
+    const menu = getMenu(root);
+
+    return menu ? ! menu.classList.contains('hidden') : false;
+}
+
+function positionMenu(root) {
+    const trigger = getTrigger(root);
+    const menu = getMenu(root);
+
+    if (! trigger || ! menu) {
+        return;
+    }
+
+    const gap = 6;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    menu.style.visibility = 'hidden';
+    menu.style.top = '0px';
+    menu.style.bottom = '';
+    menu.style.left = '0px';
+
+    const rect = trigger.getBoundingClientRect();
+    const width = Math.max(rect.width, 180);
+    menu.style.width = width + 'px';
+
+    const menuRect = menu.getBoundingClientRect();
+    const spaceBelow = vh - rect.bottom;
+    const placeUp = spaceBelow < menuRect.height + gap && rect.top > spaceBelow;
+    const left = Math.max(8, Math.min(rect.left, vw - width - 8));
+
+    menu.style.left = left + 'px';
+
+    if (placeUp) {
+        menu.style.bottom = (vh - rect.top + gap) + 'px';
+    } else {
+        menu.style.top = (rect.bottom + gap) + 'px';
+    }
+
+    menu.style.visibility = '';
+}
+
+function clearActive(root) {
+    getOptions(root).forEach((opt) => opt.classList.remove('bg-muted'));
+}
+
+function setActive(root, optionEl) {
+    clearActive(root);
+
+    if (optionEl) {
+        optionEl.classList.add('bg-muted');
+        optionEl.scrollIntoView({ block: 'nearest' });
+    }
+}
+
+function highlightSelectedOrFirst(root) {
+    const visible = getVisibleOptions(root);
+    const selected = visible.find((opt) => opt.getAttribute('aria-selected') === 'true');
+    setActive(root, selected || visible[0] || null);
+}
+
+function moveActive(root, delta) {
+    const visible = getVisibleOptions(root);
+
+    if (visible.length === 0) {
+        return;
+    }
+
+    const current = visible.findIndex((opt) => opt.classList.contains('bg-muted'));
+    let next;
+
+    if (current < 0) {
+        next = delta > 0 ? 0 : visible.length - 1;
+    } else {
+        next = (current + delta + visible.length) % visible.length;
+    }
+
+    setActive(root, visible[next]);
+}
+
+function activateCurrent(root) {
+    const active = root.querySelector('[data-select-option].bg-muted');
+
+    if (active) {
+        selectOption(root, active);
+    }
+}
+
+function updateFloatingLabel(root) {
+    const label = root.querySelector('[data-select-floating-label]');
+
+    if (! label) {
+        return;
+    }
+
+    const trigger = getTrigger(root);
+    const hasValue = isMultiple(root)
+        ? getSelectedValues(root).length > 0
+        : (getModelInput(root)?.value ?? '') !== '';
+    const focused = document.activeElement === trigger || (trigger?.contains(document.activeElement) ?? false);
+    const active = focused || isOpen(root) || hasValue;
+
+    const activeClasses = (label.dataset.labelActive || '').split(' ').filter(Boolean);
+    const restClasses = (label.dataset.labelRest || '').split(' ').filter(Boolean);
+
+    label.classList.remove(...activeClasses, ...restClasses);
+    label.classList.add(...(active ? activeClasses : restClasses));
+}
+
+function filterOptions(root, query) {
+    const q = query.trim().toLowerCase();
+    let anyVisible = false;
+
+    getOptions(root).forEach((opt) => {
+        const label = optionLabel(opt).toLowerCase();
+        const description = (opt.querySelector('[data-select-option-description]')?.textContent || '').toLowerCase();
+        const value = (opt.dataset.value || '').toLowerCase();
+        const match = q === '' || `${label} ${description} ${value}`.includes(q);
+
+        opt.style.display = match ? '' : 'none';
+
+        if (match) {
+            anyVisible = true;
+        }
+    });
+
+    root.querySelectorAll('[data-select-group-label]').forEach((groupLabel) => {
+        let node = groupLabel.nextElementSibling;
+        let hasVisible = false;
+
+        while (node && ! node.hasAttribute('data-select-group-label')) {
+            if (node.hasAttribute('data-select-option') && node.style.display !== 'none') {
+                hasVisible = true;
             }
 
-            if (this._onResize) {
-                window.removeEventListener('resize', this._onResize);
-            }
-
-            if (this._typeaheadTimer) {
-                clearTimeout(this._typeaheadTimer);
-            }
-        },
-
-        get canEdit() {
-            return ! this.disabled && ! this.readonly;
-        },
-
-        get hasValue() {
-            if (this.multiple) {
-                return this.value.length > 0;
-            }
-
-            return this.value !== '' && this.value !== null && this.value !== undefined;
-        },
-
-        get count() {
-            return this.multiple ? this.value.length : (this.hasValue ? 1 : 0);
-        },
-
-        get isFull() {
-            return this.multiple
-                && this.maxSelected !== null
-                && this.value.length >= this.maxSelected;
-        },
-
-        get labelFloated() {
-            return ! this.floating || this.focused || this.open || this.hasValue;
-        },
-
-        get floatingLabelClasses() {
-            return {
-                [this.labelActive]: this.labelFloated,
-                [this.labelRest]: ! this.labelFloated,
-            };
-        },
-
-        get selectedOptions() {
-            if (this.multiple) {
-                return this.value
-                    .map((val) => this.options.find((opt) => String(opt.value) === String(val)))
-                    .filter(Boolean);
-            }
-
-            const found = this.options.find((opt) => String(opt.value) === String(this.value));
-
-            return found ? [found] : [];
-        },
-
-        get selectedLabel() {
-            if (this.multiple) {
-                return this.selectedOptions.map((opt) => opt.label).join(', ');
-            }
-
-            return this.selectedOptions[0]?.label ?? '';
-        },
-
-        get displayText() {
-            if (! this.hasValue) {
-                return this.placeholder;
-            }
-
-            if (this.multiple) {
-                if (this.selectedOptions.length === 0) {
-                    return this.placeholder;
-                }
-
-                if (this.selectedOptions.length === 1) {
-                    return this.selectedOptions[0].label;
-                }
-
-                return `${this.selectedOptions.length} selecionados`;
-            }
-
-            return this.selectedLabel || this.placeholder;
-        },
-
-        get filteredOptions() {
-            const query = this.search.trim().toLowerCase();
-
-            return this.options.filter((opt) => {
-                if (query === '') {
-                    return true;
-                }
-
-                const haystack = [
-                    opt.label,
-                    opt.description ?? '',
-                    opt.value,
-                    opt.group ?? '',
-                ].join(' ').toLowerCase();
-
-                return haystack.includes(query);
-            });
-        },
-
-        get visibleItems() {
-            const items = [];
-            let lastGroup = null;
-
-            this.filteredOptions.forEach((opt) => {
-                const group = opt.group || null;
-
-                if (group && group !== lastGroup) {
-                    items.push({ type: 'group', label: group });
-                    lastGroup = group;
-                }
-
-                if (! group) {
-                    lastGroup = null;
-                }
-
-                items.push({ type: 'option', option: opt });
-            });
-
-            return items;
-        },
-
-        get navigableIndexes() {
-            return this.visibleItems
-                .map((item, index) => (item.type === 'option' && ! item.option.disabled ? index : -1))
-                .filter((index) => index >= 0);
-        },
-
-        isSelected(optionValue) {
-            const needle = String(optionValue);
-
-            if (this.multiple) {
-                return this.value.some((val) => String(val) === needle);
-            }
-
-            return String(this.value) === needle;
-        },
-
-        toggle() {
-            if (! this.canEdit) {
-                return;
-            }
-
-            if (this.open) {
-                this.close();
-            } else {
-                this.openMenu();
-            }
-        },
-
-        openMenu() {
-            if (! this.canEdit) {
-                return;
-            }
-
-            this.menuStyle = 'position:fixed; visibility:hidden; top:0; left:0;';
-            this.open = true;
-            this.focused = true;
-            this.search = '';
-            this.activeIndex = this.firstActiveIndex();
-
-            this.$nextTick(() => {
-                requestAnimationFrame(() => {
-                    this.updatePosition();
-
-                    if (this.searchable) {
-                        this.$refs.search?.focus();
-                    } else {
-                        this.$refs.trigger?.focus();
-                    }
-                });
-            });
-        },
-
-        close() {
-            this.open = false;
-            this.search = '';
-            this.activeIndex = -1;
-            this.menuStyle = '';
-            this.typeahead = '';
-        },
-
-        firstActiveIndex() {
-            const indexes = this.navigableIndexes;
-
-            if (indexes.length === 0) {
-                return -1;
-            }
-
-            const selected = this.visibleItems.findIndex(
-                (item) => item.type === 'option' && this.isSelected(item.option.value) && ! item.option.disabled,
-            );
-
-            return selected >= 0 ? selected : indexes[0];
-        },
-
-        updatePosition() {
-            const trigger = this.$refs.trigger;
-            const menu = this.$refs.menu;
-
-            if (! trigger || ! menu) {
-                return;
-            }
-
-            const rect = trigger.getBoundingClientRect();
-            const menuRect = menu.getBoundingClientRect();
-            const gap = 6;
-            const vw = window.innerWidth;
-            const vh = window.innerHeight;
-            const spaceBelow = vh - rect.bottom;
-            const placeUp = spaceBelow < menuRect.height + gap && rect.top > spaceBelow;
-            const width = Math.max(rect.width, 180);
-            const left = Math.max(8, Math.min(rect.left, vw - width - 8));
-
-            let style = `position:fixed; width:${width}px; z-index:1080;`;
-
-            if (placeUp) {
-                style += `bottom:${vh - rect.top + gap}px; left:${left}px;`;
-            } else {
-                style += `top:${rect.bottom + gap}px; left:${left}px;`;
-            }
-
-            this.menuStyle = style;
-        },
-
-        selectOption(option) {
-            if (! this.canEdit || ! option || option.disabled) {
-                return;
-            }
-
-            const next = String(option.value);
-
-            if (this.multiple) {
-                if (this.isSelected(next)) {
-                    this.value = this.value.filter((val) => String(val) !== next);
-                } else {
-                    if (this.isFull) {
-                        return;
-                    }
-
-                    this.value = [...this.value, next];
-                }
-
-                if (this.closeOnSelect) {
-                    this.close();
-                    this.$refs.trigger?.focus();
-                } else {
-                    this.$nextTick(() => {
-                        requestAnimationFrame(() => this.updatePosition());
-                    });
-                }
-
-                return;
-            }
-
-            this.value = next;
-
-            if (this.closeOnSelect) {
-                this.close();
-                this.$refs.trigger?.focus();
-            }
-        },
-
-        removeValue(optionValue) {
-            if (! this.canEdit || ! this.multiple) {
-                return;
-            }
-
-            const needle = String(optionValue);
-            this.value = this.value.filter((val) => String(val) !== needle);
-            this.$refs.trigger?.focus();
-        },
-
-        clear() {
-            if (! this.canEdit || ! this.clearable) {
-                return;
-            }
-
-            this.value = this.multiple ? [] : '';
-            this.close();
-            this.$refs.trigger?.focus();
-        },
-
-        onSearchInput() {
-            this.activeIndex = this.firstActiveIndex();
-            this.$nextTick(() => {
-                requestAnimationFrame(() => this.updatePosition());
-            });
-        },
-
-        onTriggerKeydown(event) {
-            if (! this.canEdit) {
-                return;
-            }
-
-            const key = event.key;
-
-            if (key === 'ArrowDown' || key === 'ArrowUp' || key === 'Enter' || key === ' ') {
-                event.preventDefault();
-
-                if (! this.open) {
-                    this.openMenu();
-
-                    return;
-                }
-
-                if (key === 'ArrowDown') {
-                    this.moveActive(1);
-                } else if (key === 'ArrowUp') {
-                    this.moveActive(-1);
-                } else {
-                    this.activateCurrent();
-                }
-
-                return;
-            }
-
-            if (key === 'Escape' && this.open) {
-                event.preventDefault();
-                this.close();
-
-                return;
-            }
-
-            if (key === 'Backspace' && this.multiple && this.hasValue && ! this.searchable) {
-                event.preventDefault();
-                this.value = this.value.slice(0, -1);
-
-                return;
-            }
-
-            if (key === 'Home' && this.open) {
-                event.preventDefault();
-                this.activeIndex = this.navigableIndexes[0] ?? -1;
-
-                return;
-            }
-
-            if (key === 'End' && this.open) {
-                event.preventDefault();
-                const indexes = this.navigableIndexes;
-                this.activeIndex = indexes[indexes.length - 1] ?? -1;
-
-                return;
-            }
-
-            if (! this.searchable && key.length === 1 && ! event.ctrlKey && ! event.metaKey && ! event.altKey) {
-                this.handleTypeahead(key);
-            }
-        },
-
-        onSearchKeydown(event) {
-            const key = event.key;
-
-            if (key === 'ArrowDown') {
-                event.preventDefault();
-                this.moveActive(1);
-
-                return;
-            }
-
-            if (key === 'ArrowUp') {
-                event.preventDefault();
-                this.moveActive(-1);
-
-                return;
-            }
-
-            if (key === 'Enter') {
-                event.preventDefault();
-                this.activateCurrent();
-
-                return;
-            }
-
-            if (key === 'Escape') {
-                event.preventDefault();
-                this.close();
-                this.$refs.trigger?.focus();
-            }
-        },
-
-        moveActive(delta) {
-            const indexes = this.navigableIndexes;
-
-            if (indexes.length === 0) {
-                this.activeIndex = -1;
-
-                return;
-            }
-
-            const currentPos = indexes.indexOf(this.activeIndex);
-            let nextPos;
-
-            if (currentPos < 0) {
-                nextPos = delta > 0 ? 0 : indexes.length - 1;
-            } else {
-                nextPos = (currentPos + delta + indexes.length) % indexes.length;
-            }
-
-            this.activeIndex = indexes[nextPos];
-            this.scrollActiveIntoView();
-        },
-
-        activateCurrent() {
-            const item = this.visibleItems[this.activeIndex];
-
-            if (item?.type === 'option') {
-                this.selectOption(item.option);
-            }
-        },
-
-        scrollActiveIntoView() {
-            this.$nextTick(() => {
-                const menu = this.$refs.menu;
-                const active = menu?.querySelector('[data-active="true"]');
-
-                active?.scrollIntoView({ block: 'nearest' });
-            });
-        },
-
-        handleTypeahead(char) {
-            this.typeahead += char.toLowerCase();
-
-            if (this._typeaheadTimer) {
-                clearTimeout(this._typeaheadTimer);
-            }
-
-            this._typeaheadTimer = setTimeout(() => {
-                this.typeahead = '';
-            }, 600);
-
-            const match = this.options.find(
-                (opt) => ! opt.disabled && String(opt.label).toLowerCase().startsWith(this.typeahead),
-            );
-
-            if (! match) {
-                return;
-            }
-
-            if (! this.open) {
-                this.openMenu();
-            }
-
-            this.$nextTick(() => {
-                const index = this.visibleItems.findIndex(
-                    (item) => item.type === 'option' && String(item.option.value) === String(match.value),
-                );
-
-                if (index >= 0) {
-                    this.activeIndex = index;
-                    this.scrollActiveIntoView();
-                }
-            });
-        },
-
-        closeIfOutside(target) {
-            if (
-                this.open
-                && this.$refs.root
-                && ! this.$refs.root.contains(target)
-                && (! this.$refs.menu || ! this.$refs.menu.contains(target))
-            ) {
-                this.close();
-                this.focused = false;
-            }
-        },
-
-        onFocus() {
-            this.focused = true;
-        },
-
-        onBlur() {
-            setTimeout(() => {
-                if (
-                    this.$refs.root?.contains(document.activeElement)
-                    || this.$refs.menu?.contains(document.activeElement)
-                ) {
-                    return;
-                }
-
-                this.focused = false;
-
-                if (this.open) {
-                    this.close();
-                }
-            }, 120);
-        },
-
-        syncHidden() {
-            const hidden = this.$refs.hidden;
-
-            if (! hidden) {
-                return;
-            }
-
-            hidden.value = this.multiple
-                ? JSON.stringify(this.value)
-                : String(this.value ?? '');
-
-            hidden.dispatchEvent(new Event('input', { bubbles: true }));
-        },
-    }));
+            node = node.nextElementSibling;
+        }
+
+        groupLabel.style.display = hasVisible ? '' : 'none';
+    });
+
+    const empty = root.querySelector('[data-select-empty]');
+
+    if (empty) {
+        empty.hidden = anyVisible;
+    }
+
+    clearActive(root);
+
+    if (anyVisible) {
+        highlightSelectedOrFirst(root);
+    }
+}
+
+function closeMenu(root) {
+    const menu = getMenu(root);
+    const trigger = getTrigger(root);
+
+    if (! menu || menu.classList.contains('hidden')) {
+        return;
+    }
+
+    menu.classList.add('hidden');
+    root.querySelector('[data-select-chevron]')?.classList.remove('rotate-180');
+
+    if (trigger) {
+        trigger.setAttribute('aria-expanded', 'false');
+    }
+
+    clearActive(root);
+    updateFloatingLabel(root);
+}
+
+function closeAllExcept(exceptRoot) {
+    document.querySelectorAll('[data-select]').forEach((root) => {
+        if (root !== exceptRoot) {
+            closeMenu(root);
+        }
+    });
+}
+
+function openMenu(root) {
+    if (isDisabledOrReadonly(root) || isOpen(root)) {
+        return;
+    }
+
+    const menu = getMenu(root);
+    const trigger = getTrigger(root);
+
+    if (! menu || ! trigger) {
+        return;
+    }
+
+    closeAllExcept(root);
+
+    menu.classList.remove('hidden');
+    trigger.setAttribute('aria-expanded', 'true');
+    root.querySelector('[data-select-chevron]')?.classList.add('rotate-180');
+    positionMenu(root);
+
+    const search = getSearchInput(root);
+
+    if (search) {
+        search.value = '';
+        filterOptions(root, '');
+        requestAnimationFrame(() => search.focus());
+    } else {
+        highlightSelectedOrFirst(root);
+    }
+
+    updateFloatingLabel(root);
+}
+
+function toggleMenu(root) {
+    if (isOpen(root)) {
+        closeMenu(root);
+    } else {
+        openMenu(root);
+    }
+}
+
+function setModelValue(root, valueOrArray) {
+    const input = getModelInput(root);
+
+    if (! input) {
+        return;
+    }
+
+    input.value = isMultiple(root) ? JSON.stringify(valueOrArray) : String(valueOrArray ?? '');
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+function updateSingleDisplay(root, optionEl) {
+    const label = root.querySelector('[data-select-label]');
+
+    if (label) {
+        label.textContent = optionLabel(optionEl);
+        label.classList.remove('text-muted-foreground');
+        label.classList.add('text-foreground');
+    }
+
+    const clearBtn = root.querySelector('[data-select-clear]');
+
+    if (clearBtn) {
+        clearBtn.classList.remove('hidden');
+    }
+
+    updateFloatingLabel(root);
+}
+
+function syncMultipleState(root) {
+    const max = root.getAttribute('data-select-max-selected');
+    const maxN = max === '' ? null : parseInt(max, 10);
+    const selectedValues = getSelectedValues(root);
+
+    setModelValue(root, selectedValues);
+
+    getOptions(root).forEach((opt) => {
+        const selected = opt.getAttribute('aria-selected') === 'true';
+        opt.disabled = ! selected && maxN !== null && selectedValues.length >= maxN;
+    });
+
+    const clearBtn = root.querySelector('[data-select-clear]');
+
+    if (clearBtn) {
+        clearBtn.classList.toggle('hidden', selectedValues.length === 0);
+    }
+
+    updateFloatingLabel(root);
+}
+
+function selectOption(root, optionEl) {
+    if (! optionEl || optionEl.disabled) {
+        return;
+    }
+
+    const value = optionEl.dataset.value;
+
+    if (isMultiple(root)) {
+        const alreadySelected = optionEl.getAttribute('aria-selected') === 'true';
+        const max = root.getAttribute('data-select-max-selected');
+        const maxN = max === '' ? null : parseInt(max, 10);
+        const current = getSelectedValues(root);
+
+        if (! alreadySelected && maxN !== null && current.length >= maxN) {
+            return;
+        }
+
+        optionEl.setAttribute('aria-selected', alreadySelected ? 'false' : 'true');
+        optionEl.classList.toggle('bg-primary/10', ! alreadySelected);
+
+        const check = optionEl.querySelector('[data-select-option-check]');
+
+        if (check) {
+            check.style.display = alreadySelected ? 'none' : '';
+        }
+
+        syncMultipleState(root);
+
+        if (root.getAttribute('data-select-close-on-select') === '1') {
+            closeMenu(root);
+            getTrigger(root)?.focus();
+        } else {
+            positionMenu(root);
+        }
+
+        return;
+    }
+
+    getOptions(root).forEach((opt) => {
+        const selected = opt === optionEl;
+        opt.setAttribute('aria-selected', selected ? 'true' : 'false');
+        opt.classList.toggle('bg-primary/10', selected);
+
+        const check = opt.querySelector('[data-select-option-check]');
+
+        if (check) {
+            check.style.display = selected ? '' : 'none';
+        }
+    });
+
+    updateSingleDisplay(root, optionEl);
+    setModelValue(root, value);
+
+    if (root.getAttribute('data-select-close-on-select') === '1') {
+        closeMenu(root);
+        getTrigger(root)?.focus();
+    }
+}
+
+function clearSelection(root) {
+    if (isDisabledOrReadonly(root)) {
+        return;
+    }
+
+    getOptions(root).forEach((opt) => {
+        opt.setAttribute('aria-selected', 'false');
+        opt.classList.remove('bg-primary/10');
+        opt.disabled = false;
+
+        const check = opt.querySelector('[data-select-option-check]');
+
+        if (check) {
+            check.style.display = 'none';
+        }
+    });
+
+    if (isMultiple(root)) {
+        setModelValue(root, []);
+    } else {
+        setModelValue(root, '');
+
+        const label = root.querySelector('[data-select-label]');
+
+        if (label) {
+            label.textContent = root.getAttribute('data-select-placeholder') || '';
+            label.classList.remove('text-foreground');
+            label.classList.add('text-muted-foreground');
+        }
+    }
+
+    const clearBtn = root.querySelector('[data-select-clear]');
+
+    if (clearBtn) {
+        clearBtn.classList.add('hidden');
+    }
+
+    updateFloatingLabel(root);
+}
+
+function removeChipValue(root, value) {
+    const option = getOptions(root).find((opt) => opt.dataset.value === value);
+
+    if (option) {
+        selectOption(root, option);
+    }
+}
+
+let typeahead = '';
+let typeaheadTimer = null;
+
+function handleTypeahead(root, char) {
+    typeahead += char.toLowerCase();
+    clearTimeout(typeaheadTimer);
+    typeaheadTimer = setTimeout(() => {
+        typeahead = '';
+    }, 600);
+
+    const match = getOptions(root).find((opt) => ! opt.disabled && optionLabel(opt).toLowerCase().startsWith(typeahead));
+
+    if (! match) {
+        return;
+    }
+
+    if (! isOpen(root)) {
+        openMenu(root);
+    }
+
+    setActive(root, match);
+}
+
+function handleTriggerKeydown(root, event) {
+    if (isDisabledOrReadonly(root)) {
+        return;
+    }
+
+    const key = event.key;
+
+    if (key === 'ArrowDown' || key === 'ArrowUp' || key === 'Enter' || key === ' ') {
+        event.preventDefault();
+
+        if (! isOpen(root)) {
+            openMenu(root);
+
+            return;
+        }
+
+        if (key === 'ArrowDown') {
+            moveActive(root, 1);
+        } else if (key === 'ArrowUp') {
+            moveActive(root, -1);
+        } else {
+            activateCurrent(root);
+        }
+
+        return;
+    }
+
+    if (key === 'Escape' && isOpen(root)) {
+        event.preventDefault();
+        closeMenu(root);
+
+        return;
+    }
+
+    if (! isSearchable(root) && key.length === 1 && ! event.ctrlKey && ! event.metaKey && ! event.altKey) {
+        handleTypeahead(root, key);
+    }
+}
+
+function handleSearchKeydown(root, event) {
+    const key = event.key;
+
+    if (key === 'ArrowDown') {
+        event.preventDefault();
+        moveActive(root, 1);
+
+        return;
+    }
+
+    if (key === 'ArrowUp') {
+        event.preventDefault();
+        moveActive(root, -1);
+
+        return;
+    }
+
+    if (key === 'Enter') {
+        event.preventDefault();
+        activateCurrent(root);
+
+        return;
+    }
+
+    if (key === 'Escape') {
+        event.preventDefault();
+        closeMenu(root);
+        getTrigger(root)?.focus();
+    }
+}
+
+document.addEventListener('click', (event) => {
+    const clearBtn = event.target.closest('[data-select-clear]');
+
+    if (clearBtn) {
+        event.stopPropagation();
+        clearSelection(getRoot(clearBtn));
+
+        return;
+    }
+
+    const removeChip = event.target.closest('[data-select-remove-chip]');
+
+    if (removeChip) {
+        event.stopPropagation();
+        const chip = removeChip.closest('[data-select-chip]');
+        const root = getRoot(removeChip);
+
+        if (chip && root) {
+            removeChipValue(root, chip.dataset.value);
+        }
+
+        return;
+    }
+
+    const option = event.target.closest('[data-select-option]');
+
+    if (option) {
+        event.preventDefault();
+        const root = getRoot(option);
+
+        if (root) {
+            selectOption(root, option);
+        }
+
+        return;
+    }
+
+    const trigger = event.target.closest('[data-select-trigger]');
+
+    if (trigger) {
+        const root = getRoot(trigger);
+
+        if (root) {
+            toggleMenu(root);
+        }
+
+        return;
+    }
+
+    document.querySelectorAll('[data-select-menu]:not(.hidden)').forEach((menu) => {
+        const root = getRoot(menu);
+
+        if (root && ! root.contains(event.target)) {
+            closeMenu(root);
+        }
+    });
+});
+
+document.addEventListener('input', (event) => {
+    const search = event.target.closest('[data-select-search]');
+
+    if (search) {
+        const root = getRoot(search);
+
+        if (root) {
+            filterOptions(root, search.value);
+        }
+    }
+});
+
+document.addEventListener('keydown', (event) => {
+    const trigger = event.target.closest('[data-select-trigger]');
+
+    if (trigger) {
+        const root = getRoot(trigger);
+
+        if (root) {
+            handleTriggerKeydown(root, event);
+        }
+
+        return;
+    }
+
+    const search = event.target.closest('[data-select-search]');
+
+    if (search) {
+        const root = getRoot(search);
+
+        if (root) {
+            handleSearchKeydown(root, event);
+        }
+    }
+});
+
+document.addEventListener('focusin', (event) => {
+    const trigger = event.target.closest('[data-select-trigger]');
+
+    if (trigger) {
+        updateFloatingLabel(getRoot(trigger));
+    }
+});
+
+document.addEventListener('focusout', (event) => {
+    const trigger = event.target.closest('[data-select-trigger]');
+
+    if (trigger) {
+        const root = getRoot(trigger);
+        setTimeout(() => updateFloatingLabel(root), 0);
+    }
+});
+
+window.addEventListener('scroll', () => {
+    document.querySelectorAll('[data-select-menu]:not(.hidden)').forEach((menu) => {
+        const root = getRoot(menu);
+
+        if (root) {
+            positionMenu(root);
+        }
+    });
+}, true);
+
+window.addEventListener('resize', () => {
+    document.querySelectorAll('[data-select-menu]:not(.hidden)').forEach((menu) => {
+        const root = getRoot(menu);
+
+        if (root) {
+            positionMenu(root);
+        }
+    });
 });
