@@ -1,5 +1,5 @@
 @php
-	$data = Cache::get('sidebarMenu');
+	$data = buildSidebarExportTree();
 @endphp
 
 <div

@@ -535,74 +535,8 @@ return new class extends Component
 
     public function exportSidebar(): void
     {
-		Cache::put('sidebarMenu', $this->buildExportTree());
-        //dd(Cache::get('sidebarMenu'));
+		buildSidebarExportTree($this->group, fresh: true);
 		$this->dispatch('toast', type: 'success', message: 'Sidebar exportado com sucesso');
-    }
-
-    /**
-     * @return list<array<string, mixed>>
-     */
-    private function buildExportTree(): array
-    {
-        return $this->menus
-            ->concat($this->hiddenMenus)
-            ->map(fn (Menu $menu): array => $this->exportNode($menu))
-            ->values()
-            ->all();
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function exportNode(Menu $menu): array
-    {
-        $node = match ($menu->type) {
-            MenuType::SEPARATOR => [
-                'type' => 'separator',
-                'text' => $menu->label,
-            ],
-            MenuType::DROP => array_filter([
-                'type' => 'drop',
-                'icon' => $menu->icon,
-                'label' => $menu->label,
-                'title' => $menu->title,
-                'description' => $menu->description,
-                'items' => $menu->children
-                    ->reject(fn (Menu $child): bool => $child->type === MenuType::HIDDEN)
-                    ->map(fn (Menu $child): array => $this->exportNode($child))
-                    ->values()
-                    ->all(),
-            ], fn (mixed $value): bool => $value !== null),
-            MenuType::DROP_ITEM => array_filter([
-                'type' => 'drop-item',
-                'route' => $menu->route,
-                'url' => $menu->url,
-                'label' => $menu->label,
-                'title' => $menu->title,
-                'description' => $menu->description,
-            ], fn (mixed $value): bool => $value !== null),
-            MenuType::HIDDEN => array_filter([
-                'type' => 'hidden',
-                'icon' => $menu->icon,
-                'route' => $menu->route,
-                'url' => $menu->url,
-                'label' => $menu->label,
-                'title' => $menu->title,
-                'description' => $menu->description,
-            ], fn (mixed $value): bool => $value !== null),
-            default => array_filter([
-                'type' => 'item',
-                'icon' => $menu->icon,
-                'route' => $menu->route,
-                'url' => $menu->url,
-                'label' => $menu->label,
-                'title' => $menu->title,
-                'description' => $menu->description,
-            ], fn (mixed $value): bool => $value !== null),
-        };
-
-        return array_merge($menu->meta ?? [], $node);
     }
 
     private function fillForm(Menu $menu): void
